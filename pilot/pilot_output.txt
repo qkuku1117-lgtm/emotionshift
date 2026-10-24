@@ -1,0 +1,54 @@
+=== MELD ===
+train: 9989 utts / 1038 dialogues | shift 4001 / stable 3173 / first-turn 2815 | shift rate 55.8% | neutral 47.2%
+dev: 1109 utts / 114 dialogues | shift 427 / stable 339 / first-turn 343 | shift rate 55.7% | neutral 42.4%
+test: 2610 utts / 280 dialogues | shift 1003 / stable 861 / first-turn 746 | shift rate 53.8% | neutral 48.1%
+
+P(current | previous), same speaker, train:
+Emotion    neutral   joy  surprise  anger  sadness  disgust  fear
+prev_same                                                        
+neutral       0.59  0.13      0.10   0.08     0.05     0.02  0.02
+joy           0.41  0.33      0.11   0.05     0.05     0.02  0.03
+surprise      0.35  0.17      0.25   0.11     0.06     0.04  0.03
+anger         0.27  0.10      0.09   0.41     0.08     0.03  0.02
+sadness       0.35  0.11      0.09   0.11     0.28     0.02  0.05
+disgust       0.31  0.11      0.11   0.18     0.05     0.22  0.02
+fear          0.32  0.08      0.10   0.17     0.12     0.03  0.17
+
+Test shift taxonomy: {'onset': 355, 'offset': 340, 'surprise_involved': 158, 'within_negative': 81, 'valence_flip': 69}
+
+Test ERC baselines:
+  majority (neutral):            F1(weighted)=0.313 F1(macro)=0.093
+  inertia, oracle prev label:    F1(weighted)=0.449 F1(macro)=0.285
+
+Shift-forecast baseline (Markov prior, oracle prev label): AUROC=0.663 AUPRC=0.673 (chance AUPRC = base rate 0.538)
+
+Shift rate by main character (all splits):
+          shift_rate  eligible_turns
+Speaker                             
+Ross           0.545            1524
+Phoebe         0.559            1311
+Joey           0.562            1532
+Monica         0.580            1260
+Chandler       0.584            1256
+Rachel         0.587            1412
+
+=== MELD-FR (emotion-flip triggers) ===
+train: 4000 flips, 5575 triggers among 35000 candidates | trigger distance 0/1/2/3 = [0.22, 0.49, 0.11, 0.07]
+  heuristic 'target' as trigger: P=0.313 R=0.225 F1=0.262
+  heuristic 'previous' as trigger: P=0.676 R=0.485 F1=0.565
+  heuristic 'target+previous' as trigger: P=0.495 R=0.710 F1=0.583
+val: 426 flips, 494 triggers among 3522 candidates | trigger distance 0/1/2/3 = [0.24, 0.65, 0.07, 0.02]
+  heuristic 'target' as trigger: P=0.279 R=0.241 F1=0.259
+  heuristic 'previous' as trigger: P=0.749 R=0.646 F1=0.693
+  heuristic 'target+previous' as trigger: P=0.514 R=0.887 F1=0.651
+test: 1002 flips, 1169 triggers among 8642 candidates | trigger distance 0/1/2/3 = [0.24, 0.64, 0.07, 0.02]
+  heuristic 'target' as trigger: P=0.283 R=0.243 F1=0.262
+  heuristic 'previous' as trigger: P=0.742 R=0.636 F1=0.684
+  heuristic 'target+previous' as trigger: P=0.512 R=0.879 F1=0.647
+
+=== DailyDialog ===
+train: 11118 dialogues / 87170 utts | shift rate 17.4% | neutral 82.8%
+validation: 1000 dialogues / 8069 utts | shift rate 15.8% | neutral 88.1%
+test: 1000 dialogues / 7740 utts | shift rate 18.0% | neutral 81.7%
+Test inertia (oracle prev label): F1(micro)=0.397 excl. neutral
+Leakage: 105/996 unique test dialogues appear verbatim in train; 197/1000 share their first two turns

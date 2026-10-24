@@ -1,0 +1,17 @@
+# Downloaded datasets and caches
+/data/
+/pilot/data/
+cache/
+*.npy
+*.pt
+*.safetensors
+checkpoints/
+wandb/
+
+# Python and notebooks
+__pycache__/
+*.py[oc]
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
