@@ -1,6 +1,6 @@
 """Pilot statistics behind the EmotionShift proposal.
 
-From the group-project folder, run `bash pilot/fetch_data.sh`, then
+From the group-project folder, run `bash scripts/fetch_data.sh`, then
 `uv run python pilot/pilot_stats.py`.
 
 A *shift* (or *flip*) is an utterance whose gold emotion differs from the same
@@ -24,7 +24,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-DATA = Path(__file__).resolve().parent / "data"
+DATA = Path(__file__).resolve().parents[1] / "data" / "raw"
 EKMAN = ["neutral", "joy", "surprise", "anger", "sadness", "disgust", "fear"]
 VALENCE = {"neutral": "neu", "joy": "pos", "surprise": "amb", "anger": "neg",
            "sadness": "neg", "disgust": "neg", "fear": "neg"}

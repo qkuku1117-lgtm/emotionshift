@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Download the public data used by the pilot scripts into pilot/data/ (gitignored).
+# Download the public datasets into data/raw/ (gitignored).
 set -euo pipefail
 
-DATA="$(cd "$(dirname "$0")" && pwd)/data"
+DATA="$(cd "$(dirname "$0")/.." && pwd)/data/raw"
 mkdir -p "$DATA/meld" "$DATA/dailydialog"
 
 MELD=https://raw.githubusercontent.com/declare-lab/MELD/master/data/MELD
