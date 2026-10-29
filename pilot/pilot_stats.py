@@ -24,6 +24,8 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+from emotionshift.data import dailydialog_leakage, load, shift_type
+
 DATA = Path(__file__).resolve().parents[1] / "data" / "raw"
 EKMAN = ["neutral", "joy", "surprise", "anger", "sadness", "disgust", "fear"]
 VALENCE = {"neutral": "neu", "joy": "pos", "surprise": "amb", "anger": "neg",
@@ -41,39 +43,23 @@ def add_history(df, dialogue, speaker, emotion):
     return df
 
 
-def shift_type(prev, curr):
-    """Coarse taxonomy of a shift between two different emotions."""
-    if prev == "neutral":
-        return "onset"
-    if curr == "neutral":
-        return "offset"
-    pair = {VALENCE[prev], VALENCE[curr]}
-    if pair == {"pos", "neg"}:
-        return "valence_flip"
-    if pair == {"neg"}:
-        return "within_negative"
-    return "surprise_involved"
-
-
 def load_meld(split):
-    df = pd.read_csv(DATA / "meld" / f"{split}_sent_emo.csv")
-    df = df.sort_values(["Dialogue_ID", "Utterance_ID"]).reset_index(drop=True)
+    df = load("meld", split).rename(columns={
+        "dialogue_id": "Dialogue_ID", "speaker": "Speaker", "emotion": "Emotion",
+    })
     return add_history(df, "Dialogue_ID", "Speaker", "Emotion")
 
 
 def load_dailydialog(split):
-    raw = pd.read_parquet(DATA / "dailydialog" / f"{split}.parquet")
-    rows = [
-        (d, t, t % 2, text, DD_LABELS[e])  # speakers strictly alternate A/B
-        for d, r in raw.iterrows()
-        for t, (text, e) in enumerate(zip(r.utterances, r.emotions))
-    ]
-    df = pd.DataFrame(rows, columns=["dialogue", "turn", "speaker", "text", "emotion"])
+    df = load("dailydialog", "dev" if split == "validation" else split)
+    raw = df.groupby("dialogue_id", sort=False)["raw_text"].agg(list).to_frame("utterances")
+    df = df.rename(columns={"dialogue_id": "dialogue"})
     return raw, add_history(df, "dialogue", "speaker", "emotion")
 
 
 def fmt_scores(y, pred, labels=None, average="weighted"):
-    return f"F1({average})={f1_score(y, pred, labels=labels, average=average):.3f}"
+    labels = EKMAN if labels is None else labels
+    return f"F1({average})={f1_score(y, pred, labels=labels, average=average, zero_division=0):.3f}"
 
 
 def meld_report():
@@ -156,20 +142,10 @@ def dailydialog_report():
     print("Test inertia (oracle prev label):",
           fmt_scores(test.emotion, inertia, labels=emotional, average="micro"), "excl. neutral")
 
-    def norm(t):
-        return " ".join(str(t).lower().split())
-
-    def full(df):
-        return {"||".join(map(norm, r.utterances)) for _, r in df.iterrows()}
-
-    def opening(df):
-        return ["||".join(map(norm, r.utterances[:2])) for _, r in df.iterrows()]
-
-    train_full, test_full = full(raws["train"]), full(raws["test"])
-    train_open = set(opening(raws["train"]))
-    shared_open = sum(o in train_open for o in opening(raws["test"]))
-    print(f"Leakage: {len(test_full & train_full)}/{len(test_full)} unique test dialogues "
-          f"appear verbatim in train; {shared_open}/{len(raws['test'])} share their first two turns")
+    leak = dailydialog_leakage()
+    print(f"Leakage: {leak['unique_test_verbatim_in_train']}/{leak['unique_test_dialogues']} "
+          f"unique test dialogues appear verbatim in train; "
+          f"{leak['test_sharing_first_two_turns']}/{leak['test_dialogues']} share their first two turns")
 
 
 if __name__ == "__main__":

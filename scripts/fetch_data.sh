@@ -16,9 +16,20 @@ for split in train val test; do
   curl -sfL -o "$DATA/meld/MELD_${split}_efr.json" "$EFR/MELD_${split}_efr.json"
 done
 
-DD="https://huggingface.co/datasets/roskoN/dailydialog/resolve/refs%2Fconvert%2Fparquet/full"
-for split in train validation test; do
-  curl -sfL -o "$DATA/dailydialog/$split.parquet" "$DD/$split/0000.parquet"
-done
+# DailyDialog JSON-lines source shared by every model and notebook.
+task_tmp=$(mktemp -d)
+trap 'rm -rf "$task_tmp"' EXIT
+curl -fsSL https://raw.githubusercontent.com/declare-lab/conv-emotion/master/DialogueRNN/dailydialog.zip -o "$task_tmp/dd.zip"
+python3 - "$task_tmp/dd.zip" "$DATA/dailydialog" <<'EOF'
+from pathlib import Path
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    for split in ["train", "valid", "test"]:
+        (Path(sys.argv[2]) / f"{split}.json").write_bytes(
+            archive.read(f"dailydialog/{split}.json")
+        )
+EOF
 
 echo "Data written to $DATA"

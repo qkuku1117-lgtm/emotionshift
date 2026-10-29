@@ -18,3 +18,9 @@ __pycache__/
 
 # Environment
 .venv/
+
+# B1 artifacts and local checks
+models/*.joblib
+.pytest_cache/
+.ruff_cache/
+outputs_quick/

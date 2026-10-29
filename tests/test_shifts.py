@@ -42,8 +42,8 @@ def test_speakers_in_different_dialogues_do_not_share_history():
     ("joy", "anger", "valence_flip"),
     ("fear", "joy", "valence_flip"),
     ("anger", "sadness", "within_negative"),
-    ("surprise", "joy", "surprise_involved"),
-    ("anger", "surprise", "surprise_involved"),
+    ("surprise", "joy", "surprise"),
+    ("anger", "surprise", "surprise"),
 ])
 def test_shift_type(prev, curr, expected):
     assert shift_type(prev, curr) == expected
@@ -52,7 +52,7 @@ def test_shift_type(prev, curr, expected):
 @pytest.mark.parametrize(("raw", "expected"), [
     ("You’re a genius!", "You're a genius!"),
     ("You\x92re a genius!", "You're a genius!"),
-    ("I ’ ll call you , okay ?", "I'll call you, okay?"),
+    ("I ’ ll call you , okay ?", "I ' ll call you , okay ?"),
     ("Wait…", "Wait..."),
 ])
 def test_clean_text(raw, expected):

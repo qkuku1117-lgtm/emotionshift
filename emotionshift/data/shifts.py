@@ -1,49 +1,71 @@
-"""Label each utterance as a speaker's first turn, a stable turn or an emotion shift.
+"""Shift labelling (proposal: "Tasks" section).
 
-A shift is an utterance whose emotion differs from the same speaker's previous
-utterance in the dialogue. This matches the flip definition of MELD-FR.
+A *shift* is an utterance whose emotion differs from the same speaker's
+previous utterance in the same dialogue. A speaker's first turn is neither
+shift nor stable (stratum ``first``).
+
+Every shift gets exactly one of five types, assigned in this priority order
+(it reproduces the MELD test counts in the proposal: 355 / 340 / 158 / 81 / 69):
+
+1. ``onset``            neutral -> any emotion (including surprise)
+2. ``offset``           any emotion (including surprise) -> neutral
+3. ``surprise``         surprise <-> another non-neutral emotion
+4. ``within_negative``  negative -> different negative (e.g. anger -> sadness)
+5. ``valence_flip``     positive <-> negative
 """
 
-import numpy as np
+from __future__ import annotations
 
-from emotionshift.data.datasets import VALENCE
+import pandas as pd
 
-STRATA = ("first", "stable", "shift")
-SHIFT_TYPES = ("onset", "offset", "valence_flip", "within_negative", "surprise_involved")
+from .labels import NEGATIVE, POSITIVE
+
+SHIFT_TYPES = ["onset", "offset", "surprise", "within_negative", "valence_flip"]
+STRATA = ["first", "stable", "shift"]
 
 
-def shift_type(prev, curr):
-    """Coarse type of a change from emotion `prev` to a different emotion `curr`."""
+def shift_type(prev: str, cur: str) -> str | None:
+    """Return the shift type for a speaker going from ``prev`` to ``cur``."""
+    if prev == cur:
+        return None
     if prev == "neutral":
         return "onset"
-    if curr == "neutral":
+    if cur == "neutral":
         return "offset"
-    pair = {VALENCE[prev], VALENCE[curr]}
-    if pair == {"positive", "negative"}:
-        return "valence_flip"
-    if pair == {"negative"}:
+    if "surprise" in (prev, cur):
+        return "surprise"
+    if prev in NEGATIVE and cur in NEGATIVE:
         return "within_negative"
-    return "surprise_involved"
+    if (prev in POSITIVE and cur in NEGATIVE) or (prev in NEGATIVE and cur in POSITIVE):
+        return "valence_flip"
+    raise ValueError(f"unclassified shift {prev} -> {cur}")
 
 
-def add_shift_columns(df, emotion_col="emotion"):
-    """Return a copy of `df` with the speaker's history and the shift labels.
+def add_shift_labels(df: pd.DataFrame, label_col: str = "emotion") -> pd.DataFrame:
+    """Add ``prev_emotion``, ``stratum`` and ``shift_type`` columns.
 
-    Expects rows ordered by dialogue and turn. Adds:
-        prev_emotion  the same speaker's previous emotion (NaN on their first turn)
-        turn_gap      turns since that speaker last spoke (NaN on their first turn)
-        stratum       "first", "stable" or "shift"
-        shift_type    one of SHIFT_TYPES on shift rows, else NaN
+    Uses *gold* labels by default (for stratifying evaluation). Pass a column
+    of predicted labels to derive predicted shifts instead.
     """
-    out = df.copy()
-    by_speaker = out.groupby(["dialogue_id", "speaker"], sort=False)
-    out["prev_emotion"] = by_speaker[emotion_col].shift(1)
-    out["turn_gap"] = out["turn"] - by_speaker["turn"].shift(1)
-    first = out["prev_emotion"].isna()
-    shift = ~first & (out[emotion_col] != out["prev_emotion"])
-    out["stratum"] = np.select([first, shift], ["first", "shift"], default="stable")
-    out["shift_type"] = [
-        shift_type(p, c) if s else np.nan
-        for p, c, s in zip(out["prev_emotion"], out[emotion_col], shift)
+    scope = [col for col in ("dataset", "split") if col in df.columns]
+    order = "source_dialogue_id" if "source_dialogue_id" in df.columns else "dialogue_id"
+    df = df.sort_values([*scope, order, "turn"]).copy()
+    by_speaker = df.groupby([*scope, "dialogue_id", "speaker"], sort=False)
+    prev = by_speaker[label_col].shift(1)
+    df["turn_gap"] = df["turn"] - by_speaker["turn"].shift(1)
+    df["prev_emotion"] = prev
+    is_first = prev.isna()
+    is_shift = ~is_first & (prev != df[label_col])
+    df["stratum"] = "stable"
+    df.loc[is_first, "stratum"] = "first"
+    df.loc[is_shift, "stratum"] = "shift"
+    df["shift_type"] = [
+        shift_type(p, c) if s == "shift" else None
+        for p, c, s in zip(df["prev_emotion"], df[label_col], df["stratum"])
     ]
-    return out
+    return df
+
+
+def add_shift_columns(df: pd.DataFrame, emotion_col: str = "emotion") -> pd.DataFrame:
+    """Notebook-compatible name for the shared shift labelling implementation."""
+    return add_shift_labels(df, label_col=emotion_col)
