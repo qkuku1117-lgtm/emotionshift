@@ -1,26 +1,37 @@
-# Downloaded datasets and caches
+# Local datasets, model artifacts and experiment output
 /data/
 /pilot/data/
-cache/
+/models/
+/outputs_quick/
+/cache/
+/checkpoints/
+/wandb/
+*.joblib
 *.npy
 *.pt
+*.pth
 *.safetensors
-checkpoints/
-wandb/
 
-# Python and notebooks
-__pycache__/
-*.py[oc]
-.ipynb_checkpoints/
-
-# macOS
-.DS_Store
-
-# Environment
+# Python environments, builds and tool caches
 .venv/
-
-# B1 artifacts and local checks
-models/*.joblib
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
 .pytest_cache/
 .ruff_cache/
-outputs_quick/
+.mypy_cache/
+.ty_cache/
+.coverage
+.coverage.*
+htmlcov/
+.ipynb_checkpoints/
+
+# Local secrets and operating-system files
+.env
+.env.*
+!.env.example
+.DS_Store
+*.swp
+*~

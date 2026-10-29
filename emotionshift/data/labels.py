@@ -26,5 +26,15 @@ POSITIVE = {"joy"}
 NEGATIVE = {"anger", "sadness", "disgust", "fear"}
 
 SPLITS = ("train", "dev", "test")
-VALENCE = {e: ("positive" if e in POSITIVE else "negative" if e in NEGATIVE
-               else "ambiguous" if e == "surprise" else "neutral") for e in EMOTIONS}
+VALENCE = {
+    e: (
+        "positive"
+        if e in POSITIVE
+        else "negative"
+        if e in NEGATIVE
+        else "ambiguous"
+        if e == "surprise"
+        else "neutral"
+    )
+    for e in EMOTIONS
+}

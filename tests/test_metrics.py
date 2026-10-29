@@ -18,20 +18,25 @@ def test_scores_match_sklearn():
     assert s["weighted_f1"] == pytest.approx(f1_score(GOLD, PRED, average="weighted"))
     assert s["macro_f1"] == pytest.approx(f1_score(GOLD, PRED, average="macro"))
     assert s["micro_f1_no_neutral"] == pytest.approx(
-        f1_score(GOLD, PRED, labels=emotional, average="micro"))
+        f1_score(GOLD, PRED, labels=emotional, average="micro")
+    )
 
 
 def dialogues():
     n = len(GOLD)
-    return add_shift_columns(pd.DataFrame({
-        "dialogue_id": [f"d{i // 10}" for i in range(n)],
-        "turn": [i % 10 for i in range(n)],
-        "speaker": ["AB"[i % 2] for i in range(n)],
-        "text": "x",
-        "emotion": GOLD,
-        "pred": PRED,
-        "perfect": GOLD,
-    }))
+    return add_shift_columns(
+        pd.DataFrame(
+            {
+                "dialogue_id": [f"d{i // 10}" for i in range(n)],
+                "turn": [i % 10 for i in range(n)],
+                "speaker": ["AB"[i % 2] for i in range(n)],
+                "text": "x",
+                "emotion": GOLD,
+                "pred": PRED,
+                "perfect": GOLD,
+            }
+        )
+    )
 
 
 def test_stratified_counts_add_up():

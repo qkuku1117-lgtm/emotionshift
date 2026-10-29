@@ -32,7 +32,8 @@ uv run pytest                    # data rules, pilot numbers, metrics, original 
 
 ```python
 from emotionshift.data.loaders import load
-df = load("meld")        # or "dailydialog"; one row per utterance
+
+df = load("meld")  # or "dailydialog"; one row per utterance
 # Official train/dev/test by default; request DailyDialog test_dedup explicitly.
 dd = load("dailydialog", splits=("train", "dev", "test_dedup"))
 ```
@@ -69,8 +70,8 @@ The proposal's MELD and DailyDialog pilot numbers are reproduced exactly by
 MELD test; MELD shift rate 53.8%; Markov shift forecast AUROC 0.663 / AUPRC 0.673;
 the self-transition rates and neutral-attractor range in the Interpretation
 section; DailyDialog shift rate 18.0% and oracle inertia 0.397 micro-F1 excl.
-neutral. Not yet reproduced: the MELD-FR previous-utterance trigger baseline
-(F1 0.684), which needs the MELD-FR data (SemEval-2024 Task 10) used by E7. Two notes: the proposal's "197 of 1,000 DailyDialog test dialogues
+neutral. The MELD-FR previous-utterance trigger baseline (test F1 0.684) is reproduced
+by `uv run python pilot/pilot_stats.py`, separately from the B1 tests. Two notes: the proposal's "197 of 1,000 DailyDialog test dialogues
 share their first two turns with train" comes out as 182 with exact matching (the
 105 verbatim figure used for de-dup matches); and the shift-type order above is the
 one that reproduces the proposal's counts.
@@ -96,11 +97,12 @@ predictions this way. Models for the demo (#3–#6) also expose
 
 ```python
 from emotionshift.eval import metrics as M, efficiency as E
-M.scores(gold, pred)                 # weighted / macro / micro-excl-neutral F1, accuracy
-M.stratified(df)                     # per stratum and shift type, with n
-M.derived_shift_detection(df)        # T2 from predicted labels
-M.bootstrap_ci(df, "weighted_f1")    # 95% CI, dialogue-level resampling
-E.latency_ms(model.predict, texts)   # E9: per-utterance CPU latency (median, p95)
+
+M.scores(gold, pred)  # weighted / macro / micro-excl-neutral F1, accuracy
+M.stratified(df)  # per stratum and shift type, with n
+M.derived_shift_detection(df)  # T2 from predicted labels
+M.bootstrap_ci(df, "weighted_f1")  # 95% CI, dialogue-level resampling
+E.latency_ms(model.predict, texts)  # E9: per-utterance CPU latency (median, p95)
 ```
 
 ## Repository layout
@@ -110,7 +112,7 @@ emotionshift/data/       loaders.py (one Dialogue/Turn table), labels.py, shifts
 emotionshift/models/     tfidf.py (#2)  · add your model here
 emotionshift/eval/       metrics.py, efficiency.py, plots.py
 configs/                 one YAML per experiment (b1_tfidf.yaml)
-scripts/                 fetch_data.sh, train_b1.py, make_notebook.py, make_team_guide_pdf.py
+scripts/                 fetch_data.sh (download data), train_b1.py (train and evaluate B1)
 notebooks/               original exploration notebooks and b1_tfidf_svm.ipynb
 tests/                   original tests, B1 tests and merge compatibility checks
 reports/                 results tables and figures per model (reports/b1/)
@@ -127,14 +129,7 @@ MELD (Poria et al., 2019) from github.com/declare-lab/MELD; DailyDialog (Li et a
 non-commercial research use; the raw data is downloaded by `scripts/fetch_data.sh`
 and never committed.
 
-## Original exploration notebooks
-
-`notebooks/01_data_exploration.ipynb`, `notebooks/02_quick_baselines.ipynb`,
-`pilot/`, their reports, and the proposal snapshot in `docs/proposal.md` are retained.
-Open notebooks with `uv run jupyter notebook`.
-The working proposal is the shared
-[EmotionShift Project Proposal](https://claude.ai/artifact/JbtymfhtEeBZyuho7A4Eka);
-the local snapshot may lag behind it.
+## Data interface
 
 All imports now share the same shift labels (`surprise`) and seven-class macro-F1.
 All notebooks and models use the unified loader in `emotionshift/data/loaders.py`;
@@ -159,11 +154,62 @@ test dialogues, retaining the first remaining copy. Official `test` is unchanged
 MELD-FR remains available through `load_meld_fr(split, root=...)` with its
 instance IDs, trigger labels, raw text, and the same text cleanup.
 
+## Notebooks and pilot
+
+`notebooks/01_data_exploration.ipynb`, `notebooks/02_quick_baselines.ipynb`,
+`pilot/`, their reports, and the proposal snapshot in `docs/proposal.md` are retained.
+Open notebooks with `uv run jupyter notebook`.
+The working proposal is the shared
+[EmotionShift Project Proposal](https://claude.ai/artifact/JbtymfhtEeBZyuho7A4Eka);
+the local snapshot may lag behind it.
+
 The exploration notebooks and their reports have been rerun using these rules.
 The pilot script also uses the unified loader; `pilot/pilot_output.txt` is retained
 as a historical record of the original proposal run.
 Saved B1 prediction CSVs retain their predictions and scores; their dialogue IDs
 and source metadata have been migrated to the unified schema.
+
+## PyTorch training
+
+See [the training guide](docs/TRAINING.md) for utterance and dialogue datasets,
+causal context and forecasting, tokenizers, tensor shapes, padding and loss masks.
+
+The modular [ShiftAware implementation](emotionshift/models/shiftaware/README.md)
+supports cached embeddings or an optional RoBERTa encoder, causal speaker
+attention, global and speaker memories, forecasting, and a joint masked loss.
+Run `uv run --extra training python scripts/smoke_shiftaware.py` for an offline
+optimization check; this does not train a benchmark model.
+
+```bash
+uv sync --extra training
+uv run --extra training pytest
+```
+
+## Development checks
+
+Use the tools directly from the repository root:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run --extra training ty check
+uv run vulture
+uv run --extra training pytest
+```
+
+Run `uv run ruff check --fix .` and `uv run ruff format .` to apply safe fixes
+and formatting. Ruff also formats code cells while retaining notebook outputs.
+Tool settings live in `pyproject.toml`; there is no separate task runner.
+
+Vulture reports findings at 80% confidence and above. Notebook-only plotting
+helpers, public TypedDict keys, and framework hooks often appear as unused at
+lower confidence. To review those candidates manually, run
+`uv run vulture --min-confidence 60`; a low-confidence finding alone is not a
+reason to delete a public interface.
+
+Edit the notebooks directly. `docs/TEAM_GUIDE.md` is the authoritative hand-in
+guide; the PDF is an exported handout. Neither needs a Python generator as a
+second copy of its content. Local caches and smoke-test output are ignored by Git.
 
 ## AI use
 

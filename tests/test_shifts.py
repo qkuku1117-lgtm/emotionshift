@@ -7,13 +7,15 @@ from emotionshift.data import add_shift_columns, clean_text, shift_type
 def toy_dialogue():
     #           A          B        A        B        A
     emotions = ["neutral", "joy", "anger", "joy", "anger"]
-    return pd.DataFrame({
-        "dialogue_id": "d0",
-        "turn": range(5),
-        "speaker": ["A", "B", "A", "B", "A"],
-        "text": ["x"] * 5,
-        "emotion": emotions,
-    })
+    return pd.DataFrame(
+        {
+            "dialogue_id": "d0",
+            "turn": range(5),
+            "speaker": ["A", "B", "A", "B", "A"],
+            "text": ["x"] * 5,
+            "emotion": emotions,
+        }
+    )
 
 
 def test_strata_follow_the_same_speaker():
@@ -36,24 +38,30 @@ def test_speakers_in_different_dialogues_do_not_share_history():
     assert out.loc[5, "stratum"] == "first"
 
 
-@pytest.mark.parametrize(("prev", "curr", "expected"), [
-    ("neutral", "anger", "onset"),
-    ("sadness", "neutral", "offset"),
-    ("joy", "anger", "valence_flip"),
-    ("fear", "joy", "valence_flip"),
-    ("anger", "sadness", "within_negative"),
-    ("surprise", "joy", "surprise"),
-    ("anger", "surprise", "surprise"),
-])
+@pytest.mark.parametrize(
+    ("prev", "curr", "expected"),
+    [
+        ("neutral", "anger", "onset"),
+        ("sadness", "neutral", "offset"),
+        ("joy", "anger", "valence_flip"),
+        ("fear", "joy", "valence_flip"),
+        ("anger", "sadness", "within_negative"),
+        ("surprise", "joy", "surprise"),
+        ("anger", "surprise", "surprise"),
+    ],
+)
 def test_shift_type(prev, curr, expected):
     assert shift_type(prev, curr) == expected
 
 
-@pytest.mark.parametrize(("raw", "expected"), [
-    ("You’re a genius!", "You're a genius!"),
-    ("You\x92re a genius!", "You're a genius!"),
-    ("I ’ ll call you , okay ?", "I ' ll call you , okay ?"),
-    ("Wait…", "Wait..."),
-])
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("You\u2019re a genius!", "You're a genius!"),
+        ("You\x92re a genius!", "You're a genius!"),
+        ("I \u2019 ll call you , okay ?", "I ' ll call you , okay ?"),
+        ("Wait…", "Wait..."),
+    ],
+)
 def test_clean_text(raw, expected):
     assert clean_text(raw) == expected

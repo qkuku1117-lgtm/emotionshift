@@ -61,7 +61,7 @@ def add_shift_labels(df: pd.DataFrame, label_col: str = "emotion") -> pd.DataFra
     df.loc[is_shift, "stratum"] = "shift"
     df["shift_type"] = [
         shift_type(p, c) if s == "shift" else None
-        for p, c, s in zip(df["prev_emotion"], df[label_col], df["stratum"])
+        for p, c, s in zip(df["prev_emotion"], df[label_col], df["stratum"], strict=True)
     ]
     return df
 

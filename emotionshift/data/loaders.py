@@ -24,20 +24,38 @@ from .labels import DAILYDIALOG_MAP, MELD_MAP, SPLITS
 from .shifts import add_shift_labels
 
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data" / "raw"
-RAW = DATA_ROOT
 _MELD_FR_FILES = {"train": "train", "dev": "val", "test": "test"}
 _DD_FILES = {"train": "train", "dev": "valid", "test": "test"}
 _COLUMNS = [
-    "dataset", "split", "dialogue_id", "source_split", "source_dialogue_id",
-    "turn", "speaker", "raw_text", "text", "emotion",
+    "dataset",
+    "split",
+    "dialogue_id",
+    "source_split",
+    "source_dialogue_id",
+    "turn",
+    "speaker",
+    "raw_text",
+    "text",
+    "emotion",
 ]
 
 # MELD's CSVs contain Windows-1252 mojibake for quotes and dashes.
 _MOJIBAKE = {
-    "\u0092": "'", "\u0091": "'", "\u0093": '"', "\u0094": '"',
-    "\u0085": "...", "\u0096": "-", "\u0097": "-", " ": " ",
-    "â\x80\x99": "'", "â\x80\x98": "'", "â\x80\x9c": '"', "â\x80\x9d": '"',
-    "â\x80\x94": "-", "â\x80\x93": "-", "â\x80¦": "...",
+    "\u0092": "'",
+    "\u0091": "'",
+    "\u0093": '"',
+    "\u0094": '"',
+    "\u0085": "...",
+    "\u0096": "-",
+    "\u0097": "-",
+    "\u00a0": " ",
+    "â\x80\x99": "'",
+    "â\x80\x98": "'",
+    "â\x80\x9c": '"',
+    "â\x80\x9d": '"',
+    "â\x80\x94": "-",
+    "â\x80\x93": "-",
+    "â\x80¦": "...",
 }
 
 
@@ -45,15 +63,21 @@ def clean_text(s: str) -> str:
     for bad, good in _MOJIBAKE.items():
         s = s.replace(bad, good)
     s = unicodedata.normalize("NFKC", s)
-    s = s.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
-    s = s.replace("—", "-").replace("–", "-").replace("…", "...")
+    s = s.replace("\u2019", "'").replace("\u2018", "'").replace("“", '"').replace("”", '"')
+    s = s.replace("—", "-").replace("\u2013", "-").replace("…", "...")
     return re.sub(r"\s+", " ", s).strip()
 
 
 def _select_splits(dataset, splits):
     allowed = (*SPLITS, "test_dedup") if dataset == "dailydialog" else SPLITS
-    selected = SPLITS if splits is None else ((splits,) if isinstance(splits, str) else tuple(splits))
-    if not selected or len(set(selected)) != len(selected) or any(s not in allowed for s in selected):
+    selected = (
+        SPLITS if splits is None else ((splits,) if isinstance(splits, str) else tuple(splits))
+    )
+    if (
+        not selected
+        or len(set(selected)) != len(selected)
+        or any(s not in allowed for s in selected)
+    ):
         raise ValueError(f"Invalid splits {selected!r} for {dataset}; choose from {allowed}")
     return selected
 
@@ -104,13 +128,15 @@ def load(dataset: str, splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
     for split in selected:
         if dataset == "meld":
             source = pd.read_csv(raw / f"{split}_sent_emo.csv", encoding="utf-8")
-            frame = pd.DataFrame({
-                "source_dialogue_id": source["Dialogue_ID"].astype(int),
-                "turn": source["Utterance_ID"].astype(int),
-                "speaker": source["Speaker"],
-                "raw_text": source["Utterance"],
-                "emotion": source["Emotion"].map(MELD_MAP),
-            })
+            frame = pd.DataFrame(
+                {
+                    "source_dialogue_id": source["Dialogue_ID"].astype(int),
+                    "turn": source["Utterance_ID"].astype(int),
+                    "speaker": source["Speaker"],
+                    "raw_text": source["Utterance"],
+                    "emotion": source["Emotion"].map(MELD_MAP),
+                }
+            )
         else:
             source_split = "test" if split == "test_dedup" else split
             keep = None
@@ -128,9 +154,16 @@ def load(dataset: str, splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
                 if keep is None or i in keep
                 for turn, u in enumerate(dialogue)
             ]
-            frame = pd.DataFrame(rows, columns=[
-                "source_dialogue_id", "turn", "speaker", "raw_text", "emotion",
-            ])
+            frame = pd.DataFrame(
+                rows,
+                columns=[
+                    "source_dialogue_id",
+                    "turn",
+                    "speaker",
+                    "raw_text",
+                    "emotion",
+                ],
+            )
         frames.append(_finish(frame, dataset, split))
     return pd.concat(frames, ignore_index=True)
 
@@ -151,6 +184,7 @@ def duplicate_dialogues(reference, target):
     Matching is case-sensitive and ordered by turn; whitespace is collapsed.
     Both tables must retain raw_text from the shared loader.
     """
+
     def fingerprints(frame):
         ordered = frame.sort_values(["dialogue_id", "turn"])
         return ordered.groupby("dialogue_id", sort=False)["raw_text"].agg(_dialogue_key)
@@ -189,15 +223,17 @@ def load_meld_fr(split, *, root: Path = DATA_ROOT):
         labels = inst.get("triggers", inst.get("labels"))  # the test file names it "labels"
         n = len(inst["utterances"])
         for pos in range(n):
-            rows.append({
-                "instance_id": f"meldfr-{split}-{i}",
-                "position": pos,
-                "distance": n - 1 - pos,  # 0 = the flip utterance itself
-                "speaker": inst["speakers"][pos],
-                "raw_text": inst["utterances"][pos],
-                "text": clean_text(inst["utterances"][pos]),
-                "emotion": inst["emotions"][pos],
-                "is_target": pos == n - 1,
-                "is_trigger": str(labels[pos]) == "1.0",
-            })
+            rows.append(
+                {
+                    "instance_id": f"meldfr-{split}-{i}",
+                    "position": pos,
+                    "distance": n - 1 - pos,  # 0 = the flip utterance itself
+                    "speaker": inst["speakers"][pos],
+                    "raw_text": inst["utterances"][pos],
+                    "text": clean_text(inst["utterances"][pos]),
+                    "emotion": inst["emotions"][pos],
+                    "is_target": pos == n - 1,
+                    "is_trigger": str(labels[pos]) == "1.0",
+                }
+            )
     return pd.DataFrame(rows)

@@ -1,0 +1,11 @@
+# Architecture only; optimize training hyperparameters on dev, never test.
+# Load with ShiftAwareConfig(**yaml.safe_load(path.read_text())).
+input_dim: 768
+hidden_dim: 256
+time_dim: 32
+num_heads: 4
+distance_buckets: 16
+dropout: 0.1
+global_memory: gated_delta
+gate: learned
+num_emotions: 7

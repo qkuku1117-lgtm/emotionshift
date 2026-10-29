@@ -26,7 +26,7 @@ each member's contribution; the GAI declaration form; peer evaluation (mandatory
 reserved for the intro and conclusion.
 
 Shared metrics: MELD weighted-F1; DailyDialog micro-F1 excluding neutral (on
-`test_dedup`); macro-F1 for both; scores per stratum (first / stable / shift);
+`test_dedup`); macro-F1 over all seven labels for both; scores per stratum (first / stable / shift);
 95% bootstrap CI. `emotionshift/eval/metrics.py` computes all of them.
 
 ## 2. Code (in this GitHub repo)
@@ -34,12 +34,18 @@ Shared metrics: MELD weighted-F1; DailyDialog micro-F1 excluding neutral (on
 1. **Your own folder or module** under the package layout (for example
    `emotionshift/models/<your_model>.py`), using the **shared data loader**:
    `from emotionshift.data.loaders import load` (same splits, labels and shift
-   definition for everyone). Run `bash scripts/fetch_data.sh` once after cloning.
+   definition for everyone). Use `load("meld", splits="train")` for training.
+   DailyDialog's headline test split must be requested explicitly:
+   `load("dailydialog", splits="test_dedup")`. Run `bash scripts/fetch_data.sh`
+   once after cloning. See [the training guide](TRAINING.md) for PyTorch batches.
 2. **One executed notebook with outputs** (`notebooks/<your_model>.ipynb`), used
    to show code in the video. See `notebooks/b1_tfidf_svm.ipynb` as an example.
 3. **Prediction CSVs in the shared format**, one per test split and seed:
    `predictions/<model>_<dataset>_<split>_seed<k>.csv` with columns
-   `dataset, split, dialogue_id, turn, speaker, text, emotion, pred, stratum, shift_type, model, seed`.
+   `dataset, split, dialogue_id, source_split, source_dialogue_id, turn, speaker,
+   raw_text, text, emotion, pred, stratum, shift_type, model, seed`.
+   `dialogue_id` includes dataset and output split; source fields retain the
+   original dialogue identity. See [the data contract](../README.md#data-interface).
 4. **The code to show in the video**: name the notebook cell(s) or file and
    line range, at most 15 lines per snippet.
 5. **How to run it**: the command, roughly how long it takes, whether it needs a

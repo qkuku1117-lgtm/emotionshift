@@ -10,14 +10,16 @@ from emotionshift.eval import scores, scores_from_confusion, stratified_scores
 
 
 def test_notebook_and_b1_helpers_use_the_shared_shift_schema():
-    dialogue = pd.DataFrame({
-        "split": ["test"] * 3,
-        "dialogue_id": ["d0"] * 3,
-        "turn": [0, 1, 2],
-        "speaker": ["A"] * 3,
-        "emotion": ["joy", "surprise", "surprise"],
-        "pred": ["joy", "surprise", "surprise"],
-    })
+    dialogue = pd.DataFrame(
+        {
+            "split": ["test"] * 3,
+            "dialogue_id": ["d0"] * 3,
+            "turn": [0, 1, 2],
+            "speaker": ["A"] * 3,
+            "emotion": ["joy", "surprise", "surprise"],
+            "pred": ["joy", "surprise", "surprise"],
+        }
+    )
     original = add_shift_columns(dialogue)
     b1 = add_shift_labels(dialogue)
 

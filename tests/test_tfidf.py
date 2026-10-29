@@ -13,7 +13,9 @@ from emotionshift.models.tfidf import TfidfBaseline, TfidfConfig
 def model():
     df = load_meld()
     tr = df[df.split == "train"]
-    return TfidfBaseline(TfidfConfig(classifier="svm", C=0.1, class_weight="balanced", features="word")).fit(tr.text, tr.emotion)
+    return TfidfBaseline(
+        TfidfConfig(classifier="svm", C=0.1, class_weight="balanced", features="word")
+    ).fit(tr.text, tr.emotion)
 
 
 def test_predict_returns_shared_labels(model):
@@ -39,11 +41,18 @@ def test_save_load_round_trip(model, tmp_path):
 def test_deterministic_across_seeds():
     df = load_meld()
     tr, te = df[df.split == "train"], df[df.split == "test"]
-    a = TfidfBaseline(TfidfConfig(C=0.1, class_weight="balanced", features="word", seed=0)).fit(tr.text, tr.emotion)
-    b = TfidfBaseline(TfidfConfig(C=0.1, class_weight="balanced", features="word", seed=4)).fit(tr.text, tr.emotion)
+    a = TfidfBaseline(TfidfConfig(C=0.1, class_weight="balanced", features="word", seed=0)).fit(
+        tr.text, tr.emotion
+    )
+    b = TfidfBaseline(TfidfConfig(C=0.1, class_weight="balanced", features="word", seed=4)).fit(
+        tr.text, tr.emotion
+    )
     assert a.predict(te.text) == b.predict(te.text)
 
 
 def test_demo_latency_budget(model):
     # Proposal R5: demo under 300 ms per turn on CPU. B1 alone should be far below.
-    assert latency_ms(model.predict, ["Oh my God!", "Yeah.", "Get out of here!"] * 20, n=50)["p95_ms"] < 300
+    assert (
+        latency_ms(model.predict, ["Oh my God!", "Yeah.", "Get out of here!"] * 20, n=50)["p95_ms"]
+        < 300
+    )

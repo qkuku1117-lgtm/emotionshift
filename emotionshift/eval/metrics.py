@@ -18,19 +18,10 @@ from sklearn.metrics import confusion_matrix, f1_score
 from ..data.labels import EMOTIONS
 from ..data.shifts import SHIFT_TYPES, STRATA
 
-NON_NEUTRAL = [e for e in EMOTIONS if e != "neutral"]
 HEADLINE = {"meld": "weighted_f1", "dailydialog": "micro_f1_no_neutral"}
 
 
 METRICS = ("accuracy", "weighted_f1", "macro_f1", "micro_f1_no_neutral")
-
-
-def _confusion(y_true, y_pred, labels):
-    index = {lab: i for i, lab in enumerate(labels)}
-    t = np.array([index[v] for v in y_true], dtype=int)
-    p = np.array([index[v] for v in y_pred], dtype=int)
-    k = len(labels)
-    return np.bincount(t * k + p, minlength=k * k).reshape(k, k)
 
 
 def scores_from_confusion(cm, labels=EMOTIONS):
@@ -65,7 +56,13 @@ def scores(gold, pred, labels=EMOTIONS) -> dict:
         "n": len(gold),
         "weighted_f1": f1_score(gold, pred, labels=labels, average="weighted", zero_division=0),
         "macro_f1": f1_score(gold, pred, labels=labels, average="macro", zero_division=0),
-        "micro_f1_no_neutral": f1_score(gold, pred, labels=[e for e in labels if e != "neutral"], average="micro", zero_division=0),
+        "micro_f1_no_neutral": f1_score(
+            gold,
+            pred,
+            labels=[e for e in labels if e != "neutral"],
+            average="micro",
+            zero_division=0,
+        ),
         "accuracy": float((gold == pred).mean()) if len(gold) else float("nan"),
     }
 
@@ -78,7 +75,9 @@ def per_class_f1(gold, pred) -> pd.DataFrame:
 
 def confusion(gold, pred) -> pd.DataFrame:
     cm = confusion_matrix(gold, pred, labels=EMOTIONS)
-    return pd.DataFrame(cm, index=[f"gold_{e}" for e in EMOTIONS], columns=[f"pred_{e}" for e in EMOTIONS])
+    return pd.DataFrame(
+        cm, index=[f"gold_{e}" for e in EMOTIONS], columns=[f"pred_{e}" for e in EMOTIONS]
+    )
 
 
 def stratified(df: pd.DataFrame, pred_col: str = "pred") -> pd.DataFrame:
@@ -111,8 +110,9 @@ def derived_shift_detection(df: pd.DataFrame, pred_col: str = "pred") -> dict:
     }
 
 
-def bootstrap_ci(df: pd.DataFrame, metric: str, pred_col: str = "pred",
-                 n_boot: int = 1000, seed: int = 0) -> tuple[float, float]:
+def bootstrap_ci(
+    df: pd.DataFrame, metric: str, pred_col: str = "pred", n_boot: int = 1000, seed: int = 0
+) -> tuple[float, float]:
     """95% percentile CI of ``metric``, resampling dialogues with replacement."""
     rng = np.random.default_rng(seed)
     scope = [c for c in ("dataset", "split") if c in df.columns]
@@ -134,13 +134,23 @@ def stratified_scores(df, pred_col, label_col="emotion", labels=EMOTIONS):
     rows = []
     for name, part in groups:
         if len(part):
-            rows.append({"group": name, "n": len(part),
-                         **scores(part[label_col], part[pred_col], labels)})
+            rows.append(
+                {"group": name, "n": len(part), **scores(part[label_col], part[pred_col], labels)}
+            )
     return pd.DataFrame(rows).set_index("group")
 
 
-def paired_bootstrap(df, pred_a, pred_b, metric="weighted_f1", mask=None, label_col="emotion",
-                     labels=EMOTIONS, n_boot=1000, seed=0):
+def paired_bootstrap(
+    df,
+    pred_a,
+    pred_b,
+    metric="weighted_f1",
+    mask=None,
+    label_col="emotion",
+    labels=EMOTIONS,
+    n_boot=1000,
+    seed=0,
+):
     """Difference metric(b) - metric(a) with a 95% CI, resampling whole dialogues.
 
     Resampling dialogues rather than utterances respects that turns of one
