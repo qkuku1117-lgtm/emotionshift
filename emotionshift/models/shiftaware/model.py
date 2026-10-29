@@ -250,12 +250,17 @@ class ShiftAware(nn.Module):
         history_speaker_ids: torch.Tensor,
         next_speaker_ids: torch.Tensor,
         turn_mask: torch.Tensor | None = None,
+        *,
+        history_turn_gaps: torch.Tensor | None = None,
+        next_turn_gaps: torch.Tensor | None = None,
     ) -> ShiftForecast:
         """Forecast without a current utterance, including from empty history.
 
         This convenience method recomputes the prefix. It is not a persistent
         streaming cache. A placeholder is appended internally, but only its
         history-only forecast is returned; its evidence prediction is discarded.
+        Supply both gap tensors when source turn IDs are nonconsecutive, matching
+        the gaps passed to forward during training.
         """
         if history_embeddings.ndim != 3 or history_embeddings.shape[-1] != self.config.input_dim:
             raise ValueError("history_embeddings must be [B,T,input_dim]")
@@ -278,6 +283,23 @@ class ShiftAware(nn.Module):
             raise ValueError("Inputs must be on the same device")
         if (next_speaker_ids < 0).any() or (turn_mask[:, 1:] & ~turn_mask[:, :-1]).any():
             raise ValueError("Next speakers must be nonnegative and history right padded")
+        if (history_turn_gaps is None) != (next_turn_gaps is None):
+            raise ValueError("Supply both history_turn_gaps and next_turn_gaps, or neither")
+        if (
+            history_turn_gaps is not None
+            and next_turn_gaps is not None
+            and (
+                history_turn_gaps.shape != (batch, turns)
+                or next_turn_gaps.shape != (batch,)
+                or history_turn_gaps.dtype not in (torch.int32, torch.int64)
+                or next_turn_gaps.dtype not in (torch.int32, torch.int64)
+                or history_turn_gaps.device != history_embeddings.device
+                or next_turn_gaps.device != history_embeddings.device
+                or (history_turn_gaps[turn_mask] < 0).any()
+                or (next_turn_gaps < 0).any()
+            )
+        ):
+            raise ValueError("Turn gaps must be nonnegative integer history [B,T] and next [B]")
         lengths = turn_mask.sum(1)
         padded_x = nn.functional.pad(history_embeddings, (0, 0, 0, 1))
         # A shorter row's next position may contain arbitrary old padding.
@@ -287,7 +309,11 @@ class ShiftAware(nn.Module):
         padded_ids = padded_ids.scatter(1, lengths[:, None], next_speaker_ids.long()[:, None])
         padded_mask = nn.functional.pad(turn_mask, (0, 1), value=False)
         padded_mask = padded_mask.scatter(1, lengths[:, None], True)
-        output = self(padded_x, padded_ids, padded_mask)
+        padded_gaps = None
+        if history_turn_gaps is not None and next_turn_gaps is not None:
+            padded_gaps = nn.functional.pad(history_turn_gaps, (0, 1))
+            padded_gaps = padded_gaps.scatter(1, lengths[:, None], next_turn_gaps[:, None])
+        output = self(padded_x, padded_ids, padded_mask, padded_gaps)
         rows = torch.arange(batch, device=history_embeddings.device)
         return ShiftForecast(
             output.forecast_emotion_probs[rows, lengths],

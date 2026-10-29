@@ -179,6 +179,10 @@ supports cached embeddings or an optional RoBERTa encoder, causal speaker
 attention, global and speaker memories, forecasting, and a joint masked loss.
 Run `uv run --extra training python scripts/smoke_shiftaware.py` for an offline
 optimization check; this does not train a benchmark model.
+For an end-to-end text run, use
+`uv run --extra training python scripts/train_shiftaware.py --dataset meld --output-dir models/shiftaware/meld_seed42`
+after fetching MELD and the chosen pretrained encoder. Training settings are
+in `configs/shiftaware_train.yaml`; the best checkpoint is selected on dev.
 
 ```bash
 uv sync --extra training

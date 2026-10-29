@@ -171,6 +171,33 @@ def test_forecast_next_requires_only_history_and_next_speaker(config, inputs):
     torch.testing.assert_close(mixed.emotion_probs[1], single.emotion_probs[0])
 
 
+def test_forecast_next_preserves_source_turn_gaps(config, inputs):
+    embeddings, speakers = inputs
+    model = ShiftAware(config).eval()
+    gaps = torch.tensor([[0, 0, 0, 64, 3], [0, 3, 0, 0, 0]])
+    full = model(embeddings, speakers, turn_gaps=gaps)
+    forecast = model.forecast_next(
+        embeddings[:, :4],
+        speakers[:, :4],
+        torch.tensor([1, 0]),
+        history_turn_gaps=gaps[:, :4],
+        next_turn_gaps=torch.tensor([3, 0]),
+    )
+    torch.testing.assert_close(forecast.emotion_probs[0], full.forecast_emotion_probs[0, 4])
+    shorter = model.forecast_next(
+        embeddings[1:2, :3],
+        speakers[1:2, :3],
+        torch.tensor([0]),
+        history_turn_gaps=gaps[1:2, :3],
+        next_turn_gaps=torch.tensor([0]),
+    )
+    torch.testing.assert_close(forecast.emotion_probs[1], shorter.emotion_probs[0])
+    with pytest.raises(ValueError, match="both"):
+        model.forecast_next(
+            embeddings[:, :2], speakers[:, :2], speakers[:, 2], next_turn_gaps=gaps[:, 2]
+        )
+
+
 @pytest.mark.parametrize("backend", ["gated_delta", "gru"])
 @pytest.mark.parametrize("gate", ["learned", "tied"])
 def test_joint_training_under_bfloat16_autocast(inputs, backend, gate):

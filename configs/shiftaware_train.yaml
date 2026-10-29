@@ -1,0 +1,21 @@
+# Starting settings for end-to-end text training. Select the best epoch on dev.
+# These are configurable defaults, not dataset-tuned hyperparameters.
+epochs: 10
+batch_size: 4
+gradient_accumulation_steps: 4
+encoder_lr: 0.00002
+dynamics_lr: 0.0003
+weight_decay: 0.01
+warmup_ratio: 0.1
+min_lr_ratio: 0.05
+max_grad_norm: 1.0
+patience: 3
+min_delta: 0.0
+max_length: 128
+num_workers: 0
+seed: 42
+log_every: 20  # optimizer updates between progress lines; 0 disables
+amp: auto
+freeze_encoder: false
+shift_weight: 1.0
+forecast_weight: 0.5

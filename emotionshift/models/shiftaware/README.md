@@ -16,7 +16,37 @@ The smoke command optimizes a tiny model on synthetic embeddings. It needs no
 data downloads, pretrained weights or GPU and does not measure task accuracy.
 Use `--device cuda` on an L40S, or `--global-memory gru` to exercise the alternative.
 
-For RoBERTa, install `uv sync --extra transformers`. Model construction and
+To train the text model on local MELD data, run:
+
+```bash
+uv sync --extra training
+uv run --extra training python scripts/train_shiftaware.py \
+  --dataset meld --output-dir models/shiftaware/meld_seed42
+```
+
+The runner reads `configs/shiftaware.yaml` for architecture and
+`configs/shiftaware_train.yaml` for training. It loads only train and dev,
+selects `best.pt` by the dataset's headline dev F1, and writes `history.json`,
+`tokenizer/` and `encoder_config/` in the output directory.
+These optimization settings are starting values; tune them on dev after the
+first real run. The optimizer uses AdamW with separate encoder and dynamics
+learning rates, no weight decay on bias/norm vectors, gradient accumulation,
+gradient clipping and warmup followed by cosine decay. CUDA uses BF16 when
+available, otherwise FP16 with gradient scaling. Early stopping uses dev F1.
+The checkpoint stores the full text model's weights and its encoder name;
+the adjacent tokenizer and encoder config make reconstruction possible without
+downloading the original encoder again.
+
+```python
+from emotionshift.models.shiftaware import ShiftAwarePredictor
+from emotionshift.models.shiftaware.training import load_trained_model
+
+text_model, tokenizer = load_trained_model("models/shiftaware/meld_seed42")
+predictor = ShiftAwarePredictor(text_model, tokenizer)
+labels = predictor.predict(["Hello", "What happened?"], speakers=["A", "B"])
+```
+
+For RoBERTa, install `uv sync --extra training`. Model construction and
 imports never download weights. Only an explicit `from_pretrained(...)` call
 may download a model; use `local_files_only=True` for a local checkpoint.
 
@@ -172,7 +202,7 @@ For the two-stage workflow, run the frozen encoder in eval mode once and save
 its output with utterance/source keys and encoder checkpoint metadata. Cache
 each split separately. Never reuse a cache across different encoder checkpoints.
 The model interface accepts these tensors; a persistent cache-generation CLI
-and a full experiment trainer are separate follow-up work.
+remains separate follow-up work. The training runner above uses text batches.
 
 ## Forecast, inspect, save and predict
 
@@ -184,6 +214,8 @@ with torch.inference_mode():
         history_speaker_ids,
         next_speaker_ids,
         turn_mask=history_mask,
+        history_turn_gaps=history_gaps,
+        next_turn_gaps=next_gap,
     )
     # forecast.emotion_probs [B,7]; shift_probs and shift_mask [B].
     output = model(embeddings, speaker_ids, return_attention=True)
@@ -194,6 +226,8 @@ restored = ShiftAware.load("checkpoints/shiftaware.pt", map_location="cpu")
 ```
 
 `forecast_next` accepts empty history and does not need the unknown utterance.
+Supply both gap arguments when training or inference uses source turn IDs with
+missing positions; otherwise it derives gaps from contiguous turn positions.
 It recomputes the prefix; persistent streaming state is not implemented yet.
 Cached-model checkpoints contain config and dynamics weights, not the text
 encoder, tokenizer or optimizer. Save those separately for a complete run.

@@ -1,6 +1,6 @@
 """Optional Hugging Face encoder adapter; imports never download weights.
 
-The cached-embedding model only needs torch. Install the transformers extra
+The cached-embedding model only needs torch. Install the training extra
 to construct a pretrained encoder. An injected backbone also supports offline
 experiments, and must return an object with last_hidden_state [N,L,D].
 """
@@ -63,7 +63,7 @@ class TransformerUtteranceEncoder(nn.Module):
         try:
             auto_model = import_module("transformers").AutoModel
         except ImportError as exc:
-            raise ImportError("Install the encoder with: uv sync --extra transformers") from exc
+            raise ImportError("Install the encoder with: uv sync --extra training") from exc
         backbone = auto_model.from_pretrained(name, local_files_only=local_files_only)
         return cls(
             backbone,
