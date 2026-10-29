@@ -8,11 +8,16 @@ from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
 
+import pandas as pd
 import torch
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
+from emotionshift.data.labels import EMOTIONS
+
 from .loss import ShiftAwareLoss
+
+CLASS_WEIGHTING = ("none", "sqrt_inverse", "inverse")
 
 
 @dataclass(frozen=True)
@@ -34,6 +39,7 @@ class TrainingConfig:
     log_every: int = 20
     amp: str = "auto"
     freeze_encoder: bool = False
+    class_weighting: str = "none"
     shift_weight: float = 1.0
     forecast_weight: float = 0.5
 
@@ -67,6 +73,21 @@ class TrainingConfig:
             raise ValueError("amp must be auto, none, bf16, or fp16")
         if not isinstance(self.freeze_encoder, bool):
             raise ValueError("freeze_encoder must be boolean")
+        if self.class_weighting not in CLASS_WEIGHTING:
+            raise ValueError(f"class_weighting must be one of {CLASS_WEIGHTING}")
+
+
+def emotion_class_weights(emotions: pd.Series, mode: str) -> torch.Tensor | None:
+    """Inverse-frequency weights from training labels; sqrt_inverse softens them."""
+    if mode not in CLASS_WEIGHTING:
+        raise ValueError(f"class_weighting must be one of {CLASS_WEIGHTING}")
+    if mode == "none":
+        return None
+    counts = emotions.value_counts().reindex(EMOTIONS, fill_value=0)
+    if (counts == 0).any():
+        raise ValueError(f"No training examples for {list(counts[counts == 0].index)}")
+    weights = torch.tensor((len(emotions) / (len(EMOTIONS) * counts)).to_numpy(), dtype=torch.float)
+    return weights.sqrt() if mode == "sqrt_inverse" else weights
 
 
 def make_optimizer(model: torch.nn.Module, config: TrainingConfig) -> AdamW:

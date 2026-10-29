@@ -4,11 +4,13 @@ import pytest
 
 torch = pytest.importorskip("torch", reason="Install the training extra")
 
+import pandas as pd
 from torch import nn
 
 from emotionshift.models.shiftaware import ShiftAware, ShiftAwareConfig, ShiftAwareLoss
 from emotionshift.models.shiftaware.training import (
     TrainingConfig,
+    emotion_class_weights,
     make_optimizer,
     make_scheduler,
     train_epoch,
@@ -83,3 +85,19 @@ def test_accumulated_training_steps_scheduler_on_optimizer_updates():
 def test_log_every_must_be_nonnegative():
     with pytest.raises(ValueError, match="log_every"):
         TrainingConfig(log_every=-1)
+
+
+def test_class_weights_upweight_rare_emotions():
+    from emotionshift.data.labels import EMOTIONS
+
+    emotions = pd.Series(["neutral"] * 40 + [e for e in EMOTIONS for _ in range(10)])
+    assert emotion_class_weights(emotions, "none") is None
+    inverse = emotion_class_weights(emotions, "inverse")
+    soft = emotion_class_weights(emotions, "sqrt_inverse")
+    assert inverse is not None and soft is not None
+    assert inverse[0] < inverse[1] and inverse[1] == inverse[6]
+    assert torch.allclose(soft, inverse.sqrt())
+    with pytest.raises(ValueError, match="No training examples"):
+        emotion_class_weights(pd.Series(["neutral", "joy"]), "inverse")
+    with pytest.raises(ValueError, match="class_weighting"):
+        TrainingConfig(class_weighting="balanced")

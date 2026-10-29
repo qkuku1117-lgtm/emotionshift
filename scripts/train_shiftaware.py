@@ -11,7 +11,7 @@ import random
 import subprocess
 import time
 from contextlib import nullcontext
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from importlib import import_module
 from pathlib import Path
 from typing import Any, cast
@@ -35,6 +35,7 @@ from emotionshift.models.shiftaware import (
 from emotionshift.models.shiftaware.training import (
     TrainingConfig,
     autocast_dtype,
+    emotion_class_weights,
     make_optimizer,
     make_scheduler,
     move_batch,
@@ -118,9 +119,17 @@ def main():
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--seed", type=int, help="Override the training config seed")
+    parser.add_argument(
+        "--class-weighting", help="Override class_weighting (none, sqrt_inverse, inverse)"
+    )
     args = parser.parse_args()
 
     settings = TrainingConfig(**read_settings(args.training_config))
+    if args.seed is not None:
+        settings = replace(settings, seed=args.seed)
+    if args.class_weighting is not None:
+        settings = replace(settings, class_weighting=args.class_weighting)
     architecture = ShiftAwareConfig(**read_settings(args.architecture))
     device = torch.device(args.device)
     dtype = autocast_dtype(device, settings.amp)
@@ -148,8 +157,11 @@ def main():
     if encoder.embedding_dim != architecture.input_dim:
         raise ValueError("Architecture input_dim must match the pretrained encoder hidden size")
     model = TextShiftAware(encoder, ShiftAware(architecture)).to(device)
+    class_weights = emotion_class_weights(train_frame["emotion"], settings.class_weighting)
     criterion = ShiftAwareLoss(
-        shift_weight=settings.shift_weight, forecast_weight=settings.forecast_weight
+        class_weights=class_weights,
+        shift_weight=settings.shift_weight,
+        forecast_weight=settings.forecast_weight,
     ).to(device)
 
     collator = DialogueCollator(tokenizer, max_length=settings.max_length)
@@ -202,6 +214,11 @@ def main():
         "updates_per_epoch": steps_per_epoch,
         "total_updates": steps_per_epoch * settings.epochs,
         "objective": objective,
+        "class_weights": (
+            dict(zip(EMOTIONS, class_weights.tolist(), strict=True))
+            if class_weights is not None
+            else None
+        ),
     }
     (args.output_dir / "run.json").write_text(json.dumps(run, indent=2))
     log_line({"run": run})

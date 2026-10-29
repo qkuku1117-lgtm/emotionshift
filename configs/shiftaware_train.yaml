@@ -17,5 +17,6 @@ seed: 42
 log_every: 20  # optimizer updates between progress lines; 0 disables
 amp: auto
 freeze_encoder: false
+class_weighting: none  # none | sqrt_inverse | inverse (from train label counts)
 shift_weight: 1.0
 forecast_weight: 0.5
