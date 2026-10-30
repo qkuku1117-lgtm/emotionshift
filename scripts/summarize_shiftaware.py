@@ -70,7 +70,9 @@ def summarize(variant_dir: Path, dataset: str) -> dict[str, Any] | None:
     return summary
 
 
-def cell(stat: dict) -> str:
+def cell(stat: dict, n_seeds: int) -> str:
+    if n_seeds == 1:
+        return f"{100 * stat['mean']:.2f} (1 seed)"
     return f"{100 * stat['mean']:.2f} ± {100 * stat['std']:.2f}"
 
 
@@ -88,7 +90,10 @@ def main():
             for split, t in b1["test"].items():
                 rows.append(
                     [dataset, split, "B1 TF-IDF", len(b1["seeds"])]
-                    + [cell(t[k]) for k in ("weighted_f1", "macro_f1", "micro_f1_no_neutral")]
+                    + [
+                        cell(t[k], len(b1["seeds"]))
+                        for k in ("weighted_f1", "macro_f1", "micro_f1_no_neutral")
+                    ]
                     + [shift_turn_f1(REPORTS / "b1", dataset, split), "n/a"]
                 )
         for variant_dir in sorted(REPORTS.glob("shiftaware*")):
@@ -98,8 +103,14 @@ def main():
             for split, t in summary["test"].items():
                 rows.append(
                     [dataset, split, summary["model"], len(summary["seeds"])]
-                    + [cell(t[k]) for k in ("weighted_f1", "macro_f1", "micro_f1_no_neutral")]
-                    + [shift_turn_f1(variant_dir, dataset, split), cell(t["shift_head"]["auroc"])]
+                    + [
+                        cell(t[k], len(summary["seeds"]))
+                        for k in ("weighted_f1", "macro_f1", "micro_f1_no_neutral")
+                    ]
+                    + [
+                        shift_turn_f1(variant_dir, dataset, split),
+                        cell(t["shift_head"]["auroc"], len(summary["seeds"])),
+                    ]
                 )
     header = [
         "dataset",
