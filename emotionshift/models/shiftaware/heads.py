@@ -27,6 +27,7 @@ class PredictionHeads(nn.Module):
         super().__init__()
         d, c, td = config.hidden_dim, config.num_emotions, config.time_dim
         self.gate_kind = config.gate
+        self.mixing = config.mixing
         self.prior = (
             nn.Sequential(projection(d + c + td, d, config.dropout), nn.Linear(d, c))
             if config.prior == "speaker"
@@ -81,11 +82,19 @@ class PredictionHeads(nn.Module):
                 -1
             )
         )
-        # Mix probabilities in log space to avoid log(0) when a gate saturates.
-        log_probs = torch.logaddexp(
-            F.logsigmoid(-gate_logits.float())[:, None] + prior_logits.float().log_softmax(-1),
-            F.logsigmoid(gate_logits.float())[:, None] + evidence_logits.float().log_softmax(-1),
-        )
+        prior_log_probs = prior_logits.float().log_softmax(-1)
+        evidence_log_probs = evidence_logits.float().log_softmax(-1)
+        if self.mixing == "product":
+            # Evidence reweighted by the prior raised to (1 - beta): the prior can
+            # break ties on stable turns but cannot override confident evidence.
+            weight = F.logsigmoid(-gate_logits.float()).exp()[:, None]
+            log_probs = (evidence_log_probs + weight * prior_log_probs).log_softmax(-1)
+        else:
+            # Mix probabilities in log space to avoid log(0) when a gate saturates.
+            log_probs = torch.logaddexp(
+                F.logsigmoid(-gate_logits.float())[:, None] + prior_log_probs,
+                F.logsigmoid(gate_logits.float())[:, None] + evidence_log_probs,
+            )
         return Prediction(
             log_probs, prior_logits, evidence_logits, shift_logits, gate_logits.sigmoid()
         )

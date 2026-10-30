@@ -33,7 +33,7 @@ def config():
     )
 
 
-DESIGNS = [("speaker", "full"), ("forecast", "local")]
+DESIGNS = [("speaker", "full", "probability"), ("forecast", "local", "product")]
 
 
 @pytest.fixture
@@ -81,8 +81,10 @@ def test_distributions_shift_eligibility_and_retrieval(config, inputs):
 
 
 @pytest.mark.parametrize("backend", ["gated_delta", "gru"])
-@pytest.mark.parametrize(("prior", "evidence"), DESIGNS)
-def test_future_and_current_text_cannot_leak_into_forecast(inputs, backend, prior, evidence):
+@pytest.mark.parametrize(("prior", "evidence", "mixing"), DESIGNS)
+def test_future_and_current_text_cannot_leak_into_forecast(
+    inputs, backend, prior, evidence, mixing
+):
     model = ShiftAware(
         ShiftAwareConfig(
             input_dim=12,
@@ -93,6 +95,7 @@ def test_future_and_current_text_cannot_leak_into_forecast(inputs, backend, prio
             global_memory=backend,
             prior=prior,
             evidence=evidence,
+            mixing=mixing,
         )
     ).eval()
     embeddings, speakers = inputs
@@ -206,8 +209,8 @@ def test_forecast_next_preserves_source_turn_gaps(config, inputs):
 
 @pytest.mark.parametrize("backend", ["gated_delta", "gru"])
 @pytest.mark.parametrize("gate", ["learned", "tied"])
-@pytest.mark.parametrize(("prior", "evidence"), DESIGNS)
-def test_joint_training_under_bfloat16_autocast(inputs, backend, gate, prior, evidence):
+@pytest.mark.parametrize(("prior", "evidence", "mixing"), DESIGNS)
+def test_joint_training_under_bfloat16_autocast(inputs, backend, gate, prior, evidence, mixing):
     model = ShiftAware(
         ShiftAwareConfig(
             input_dim=12,
@@ -219,6 +222,7 @@ def test_joint_training_under_bfloat16_autocast(inputs, backend, gate, prior, ev
             gate=gate,
             prior=prior,
             evidence=evidence,
+            mixing=mixing,
         )
     )
     embeddings, speakers = inputs
@@ -437,6 +441,7 @@ def test_real_roberta_adapter_without_pretrained_download(config):
         {"gate": "unknown"},
         {"prior": "unknown"},
         {"evidence": "unknown"},
+        {"mixing": "unknown"},
         {"num_emotions": 3},
     ],
 )

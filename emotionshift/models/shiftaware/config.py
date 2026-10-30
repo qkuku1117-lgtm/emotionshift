@@ -21,6 +21,9 @@ class ShiftAwareConfig:
     # "local" limits evidence to the utterance and other speakers' turns, leaving
     # the speaker's own trajectory to the prior; the shift head still sees both.
     evidence: Literal["full", "local"] = "full"
+    # "probability": (1 - beta) * P(prior) + beta * P(evidence).
+    # "product": P(evidence) * P(prior) ** (1 - beta), renormalized.
+    mixing: Literal["probability", "product"] = "probability"
     num_emotions: int = len(EMOTIONS)
 
     def __post_init__(self):
@@ -40,5 +43,7 @@ class ShiftAwareConfig:
             raise ValueError("prior must be 'speaker' or 'forecast'")
         if self.evidence not in ("full", "local"):
             raise ValueError("evidence must be 'full' or 'local'")
+        if self.mixing not in ("probability", "product"):
+            raise ValueError("mixing must be 'probability' or 'product'")
         if self.num_emotions != len(EMOTIONS):
             raise ValueError("Use the shared seven-emotion label space")
