@@ -46,6 +46,17 @@ TRAINING_KEYS = {f.name for f in fields(TrainingConfig)}
 ARCHITECTURE_KEYS = {f.name for f in fields(ShiftAwareConfig)}
 
 
+def parse_value(text: str):
+    """YAML scalar, except that YAML 1.1 reads 1e-5 (no decimal point) as a string."""
+    value = yaml.safe_load(text)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    return value
+
+
 def read_settings(path: Path) -> dict:
     settings = yaml.safe_load(path.read_text())
     if not isinstance(settings, dict):
@@ -150,7 +161,7 @@ def main():
         target = training_settings if key in TRAINING_KEYS else architecture_settings
         if not sep or key not in TRAINING_KEYS | ARCHITECTURE_KEYS:
             raise ValueError(f"--set expects KEY=VALUE with a known key, got {item!r}")
-        target[key] = yaml.safe_load(value)
+        target[key] = parse_value(value)
     settings = TrainingConfig(**training_settings)
     if args.seed is not None:
         settings = replace(settings, seed=args.seed)
