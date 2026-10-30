@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .labels import DAILYDIALOG_MAP, MELD_MAP
+from .labels import DAILYDIALOG_MAP, MELD_MAP, EMOWOZ_LABELS, EMOWOZ_MAP
 from .shifts import add_shift_labels
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -116,4 +116,47 @@ def dailydialog_leakage(raw: Path = RAW / "dailydialog") -> dict:
 
 
 def load(dataset: str) -> pd.DataFrame:
-    return {"meld": load_meld, "dailydialog": load_dailydialog}[dataset]()
+    return {"meld": load_meld, "dailydialog": load_dailydialog,
+            "emowoz": load_emowoz}[dataset]()
+
+
+def load_emowoz(raw: Path = RAW / "emowoz") -> pd.DataFrame:
+    """Official Zenodo 6506504 files; labelled user turns only.
+
+    Original turn indices and native labels are retained. See docs/EMOWOZ.md
+    for the lossy mapping. System turns are unlabelled, never neutral targets.
+    """
+    with open(raw / "data-split.json", encoding="utf-8") as f:
+        splits = json.load(f)
+    sources = {}
+    for source in ("multiwoz", "dialmage"):
+        with open(raw / f"emowoz-{source}.json", encoding="utf-8") as f:
+            sources[source] = json.load(f)
+    rows, assigned = [], set()
+    for split in ("train", "dev", "test"):
+        for source, dialogues in sources.items():
+            # The official manifest repeats one training ID. Keep its first copy.
+            for dialogue_id in dict.fromkeys(splits[split][source]):
+                if dialogue_id in assigned:
+                    raise ValueError(f"EmoWOZ dialogue appears in multiple partitions: {dialogue_id}")
+                assigned.add(dialogue_id)
+                for turn, utterance in enumerate(dialogues[dialogue_id]["log"]):
+                    if turn % 2:
+                        continue
+                    native_id = utterance["emotion"][3]["emotion"]
+                    if type(native_id) is not int or native_id not in EMOWOZ_LABELS:
+                        raise ValueError(f"Invalid EmoWOZ label {native_id!r}: {dialogue_id}:{turn}")
+                    native = EMOWOZ_LABELS[native_id]
+                    rows.append({
+                        "dataset": "emowoz", "split": split,
+                        "dialogue_id": dialogue_id, "turn": turn, "speaker": "user",
+                        "text": clean_text(utterance["text"]), "emotion": EMOWOZ_MAP[native],
+                        "emotion_original_id": native_id, "emotion_original": native,
+                        "source": source,
+                    })
+    columns = ["dataset", "split", "dialogue_id", "turn", "speaker", "text", "emotion",
+               "emotion_original_id", "emotion_original", "source"]
+    df = add_shift_labels(pd.DataFrame(rows, columns=columns)).reset_index(drop=True)
+    shared = ["dataset", "split", "dialogue_id", "turn", "speaker", "text", "emotion",
+              "prev_emotion", "stratum", "shift_type"]
+    return df[shared + ["emotion_original_id", "emotion_original", "source"]]

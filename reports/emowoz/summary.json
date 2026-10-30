@@ -1,0 +1,31 @@
+{
+  "dev": {
+    "dialogues": 1100,
+    "utterances": 8509,
+    "first": 1100,
+    "stable": 4786,
+    "shift": 2623,
+    "shift_rate_excluding_first": 0.35402888378998515
+  },
+  "test": {
+    "dialogues": 1100,
+    "utterances": 8634,
+    "first": 1100,
+    "stable": 4919,
+    "shift": 2615,
+    "shift_rate_excluding_first": 0.3470931775949031
+  },
+  "train": {
+    "dialogues": 9233,
+    "utterances": 66474,
+    "first": 9233,
+    "stable": 36700,
+    "shift": 20541,
+    "shift_rate_excluding_first": 0.3588511731101833
+  },
+  "provenance": {
+    "data-split.json": "15a4060a7dd005585af4f64905392724e61d921e74404cc5074fca4069c05c91",
+    "emowoz-dialmage.json": "1035f0cf408a513192a08e7e830d2aac50dc74e13c424830b6cd986328a75160",
+    "emowoz-multiwoz.json": "b1805796d10b260ce6d5a18d9259dea7ea2ce58bf8516fa53ec00349e8e0ec58"
+  }
+}

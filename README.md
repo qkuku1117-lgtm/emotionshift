@@ -128,3 +128,7 @@ MELD (Poria et al., 2019) from github.com/declare-lab/MELD; DailyDialog (Li et a
 2017) official split via github.com/declare-lab/conv-emotion. Both are for
 non-commercial research use; the raw data is downloaded by `scripts/fetch_data.sh`
 and never committed.
+
+## EmoWOZ (third dataset)
+
+See [docs/EMOWOZ.md](docs/EMOWOZ.md) for official downloads, preserved native labels, the explicit lossy mapping, statistics, and VS Code setup. Load with load('emowoz'). Existing datasets and shift rules are unchanged.

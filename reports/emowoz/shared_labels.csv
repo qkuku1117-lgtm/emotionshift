@@ -1,0 +1,16 @@
+split,emotion,n
+dev,anger,486
+dev,fear,19
+dev,joy,1936
+dev,neutral,5984
+dev,sadness,84
+test,anger,621
+test,fear,18
+test,joy,1908
+test,neutral,6014
+test,sadness,73
+train,anger,4115
+train,fear,359
+train,joy,14659
+train,neutral,46658
+train,sadness,683

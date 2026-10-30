@@ -1,0 +1,13 @@
+split,shift_type,n
+dev,offset,786
+dev,onset,1744
+dev,valence_flip,89
+dev,within_negative,4
+test,offset,765
+test,onset,1728
+test,valence_flip,112
+test,within_negative,10
+train,offset,6110
+train,onset,13538
+train,valence_flip,854
+train,within_negative,39

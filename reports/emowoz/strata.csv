@@ -1,0 +1,10 @@
+split,stratum,n
+dev,first,1100
+dev,shift,2623
+dev,stable,4786
+test,first,1100
+test,shift,2615
+test,stable,4919
+train,first,9233
+train,shift,20541
+train,stable,36700
