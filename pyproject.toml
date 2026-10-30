@@ -16,6 +16,10 @@ dependencies = [
 
 [project.optional-dependencies]
 train = ["torch>=2.6", "transformers>=4.45,<6"]
+# B3 RoBERTa: uv sync --extra transformers
+transformers = ["torch>=2.1", "transformers>=4.41", "accelerate>=0.26"]
+# B2 BiGRU / BiLSTM: uv sync --extra rnn
+rnn = ["torch>=2.4", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29"]
 
 [dependency-groups]
 dev = [

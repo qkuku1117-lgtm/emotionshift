@@ -1,7 +1,7 @@
 # Local datasets, model artifacts and experiment output
 /data/
 /pilot/data/
-/models/
+/models/*
 /outputs_quick/
 /cache/
 /checkpoints/
@@ -11,6 +11,8 @@
 *.pt
 *.pth
 *.safetensors
+# Small demo checkpoints are committed (see README); large models live on Google Drive.
+!/models/b2_*.pt
 
 # Python environments, builds and tool caches
 .venv/

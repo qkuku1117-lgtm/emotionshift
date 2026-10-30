@@ -1,0 +1,10 @@
+text,gold,pred,prob,attributions
+Not once did we do that.,neutral,neutral,0.778,Not:-0.10 once:-0.30 did:-0.43 we:-0.02 do:-0.14 that.:-0.23
+I got new sheets!,joy,joy,0.87,I:-0.55 got:+0.16 new:+0.73 sheets!:+3.20
+"Oh really? Uh, Monica said she had a date at 9:00.",surprise,surprise,0.7,"Oh:-0.36 really?:+2.68 Uh,:-0.16 Monica:+0.12 said:+0.08 she:+0.13 had:+0.34 a:+0.38 date:+0.42 at:+0.07 9:00.:-0.04"
+"Not this hospital, I'm going to sue you!",anger,anger,0.696,"Not:+0.06 this:+0.28 hospital,:+0.33 I'm:+0.28 going:+0.29 to:+0.11 sue:+0.36 you!:+1.34"
+"Oh God, I'm so sorry.",sadness,sadness,0.713,"Oh:+0.13 God,:+0.65 I'm:+0.31 so:+0.61 sorry.:+0.81"
+"Eww! Oh, it's all dirty. You should throw this out.",disgust,disgust,0.239,"Eww!:+0.38 Oh,:+0.12 it's:+0.12 all:+0.02 dirty.:+0.53 You:-0.00 should:+0.07 throw:+0.24 this:+0.01 out.:+0.24"
+Oh! Oh! That's so hard.,surprise,sadness,0.471,Oh!:+0.49 Oh!:+0.53 That's:-0.32 so:+0.06 hard.:+1.01
+"Now here's the plan, grab your coat, we're going to a strip club.",joy,neutral,0.878,"Now:-0.10 here's:+0.25 the:+0.10 plan,:+0.02 grab:-0.26 your:+0.10 coat,:-0.05 we're:+0.12 going:-0.02 to:+0.02 a:-0.12 strip:-0.23 club.:-0.28"
+But what does that gonna do...,anger,neutral,0.442,But:-0.08 what:-0.08 does:-0.65 that:-0.99 gonna:-0.18 do...:-0.55
