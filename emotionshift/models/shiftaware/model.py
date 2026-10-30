@@ -10,6 +10,7 @@ from .config import ShiftAwareConfig
 from .heads import PredictionHeads, projection
 from .memory import GatedDeltaMemory, GRUMemory, SpeakerMemory
 from .temporal import TemporalEncoding
+from .transformer import TransformerDynamics
 
 
 @dataclass
@@ -81,6 +82,9 @@ class ShiftAware(nn.Module):
         self.utterance_projection = nn.Sequential(
             nn.Linear(cfg.input_dim, d), nn.LayerNorm(d), nn.Dropout(cfg.dropout)
         )
+        if cfg.dynamics == "transformer":
+            self.transformer = TransformerDynamics(cfg)
+            return
         self.temporal = TemporalEncoding(td, cfg.distance_buckets)
         self.attention = CrossSpeakerAttention(d, cfg.num_heads, cfg.distance_buckets)
         self.forecast_query = projection(2 * d + c + td, d, cfg.dropout)
@@ -131,6 +135,10 @@ class ShiftAware(nn.Module):
         return_attention: bool = False,
     ) -> ShiftAwareOutput:
         turn_mask = self._validate(embeddings, speaker_ids, turn_mask, turn_gaps)
+        if self.config.dynamics == "transformer":
+            return self._forward_transformer(
+                embeddings, speaker_ids, turn_mask, turn_gaps, return_attention
+            )
         batch, turns = speaker_ids.shape
         cfg = self.config
         num_speakers = int(speaker_ids[turn_mask].max()) + 1
@@ -248,6 +256,40 @@ class ShiftAware(nn.Module):
             attention_weights=torch.stack(attention_rows, 1) if return_attention else None,
             forecast_attention_weights=torch.stack(forecast_rows, 1) if return_attention else None,
             attention_null_weights=torch.stack(null_rows, 1) if return_attention else None,
+        )
+
+    def _forward_transformer(
+        self, embeddings, speaker_ids, turn_mask, turn_gaps, return_attention
+    ) -> ShiftAwareOutput:
+        x = self.utterance_projection(embeddings.masked_fill(~turn_mask[..., None], 0))
+        ids = speaker_ids.masked_fill(~turn_mask, 0).long()
+        out = self.transformer(x, ids, turn_mask, turn_gaps)
+        rows = turn_mask[..., None]
+        attention = forecast_attention = null = None
+        if return_attention:
+            turns = turn_mask.shape[1]
+            earlier = torch.ones(turns, turns, device=x.device, dtype=torch.bool).tril(-1)
+            weights = out["attention_weights"]
+            if weights is None:  # utterance-only: all weight stays on the current turn
+                weights = torch.eye(turns, device=x.device).expand(len(x), -1, -1)
+            # History weights exclude the current turn; its own weight is reported as null.
+            attention = weights.masked_fill(~earlier, 0) * rows
+            null = weights.diagonal(dim1=1, dim2=2) * turn_mask
+            forecast_attention = out["forecast_attention_weights"][..., :turns] * rows
+        return ShiftAwareOutput(
+            emotion_log_probs=out["emotion_log_probs"],
+            # The history-only forecast plays the prior's role; nothing is mixed.
+            prior_logits=out["forecast_emotion_logits"],
+            evidence_logits=out["emotion_logits"],
+            shift_logits=out["shift_logits"],
+            forecast_emotion_logits=out["forecast_emotion_logits"],
+            forecast_shift_logits=out["forecast_shift_logits"],
+            mixing_weights=turn_mask.float(),
+            turn_mask=turn_mask,
+            shift_mask=out["shift_mask"],
+            attention_weights=attention,
+            forecast_attention_weights=forecast_attention,
+            attention_null_weights=null,
         )
 
     def forecast_next(

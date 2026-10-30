@@ -33,6 +33,13 @@ def config():
     )
 
 
+@pytest.fixture(params=["recurrent", "transformer"])
+def any_config(request):
+    return ShiftAwareConfig(
+        input_dim=12, hidden_dim=16, time_dim=4, num_heads=2, dropout=0, dynamics=request.param
+    )
+
+
 DESIGNS = [("speaker", "full", "probability"), ("forecast", "local", "product")]
 
 
@@ -117,8 +124,8 @@ def test_future_and_current_text_cannot_leak_into_forecast(
     assert not gradient[1].any()
 
 
-def test_batching_padding_and_speaker_renaming_do_not_change_predictions(config, inputs):
-    model = ShiftAware(config).eval()
+def test_batching_padding_and_speaker_renaming_do_not_change_predictions(any_config, inputs):
+    model = ShiftAware(any_config).eval()
     embeddings, speakers = inputs
     output = model(embeddings, speakers)
     for row, length in ((0, 5), (1, 3)):
@@ -140,8 +147,8 @@ def test_batching_padding_and_speaker_renaming_do_not_change_predictions(config,
     torch.testing.assert_close(output.emotion_probs, padded.emotion_probs)
 
 
-def test_explicit_speaker_gaps_and_checkpoint_roundtrip(config, inputs, tmp_path):
-    model = ShiftAware(config).eval()
+def test_explicit_speaker_gaps_and_checkpoint_roundtrip(any_config, inputs, tmp_path):
+    model = ShiftAware(any_config).eval()
     embeddings, speakers = inputs
     automatic = model(embeddings, speakers)
     gaps = torch.tensor([[0, 0, 0, 3, 3], [0, 1, 0, 0, 0]])
@@ -158,12 +165,12 @@ def test_explicit_speaker_gaps_and_checkpoint_roundtrip(config, inputs, tmp_path
     torch.testing.assert_close(
         automatic.emotion_probs, restored(embeddings, speakers).emotion_probs
     )
-    assert restored.config == config
+    assert restored.config == any_config
 
 
-def test_forecast_next_requires_only_history_and_next_speaker(config, inputs):
+def test_forecast_next_requires_only_history_and_next_speaker(any_config, inputs):
     embeddings, speakers = inputs
-    model = ShiftAware(config).eval()
+    model = ShiftAware(any_config).eval()
     full = model(embeddings, speakers)
     forecast = model.forecast_next(embeddings[:, :2], speakers[:, :2], speakers[:, 2])
     torch.testing.assert_close(forecast.emotion_probs, full.forecast_emotion_probs[:, 2])
@@ -180,9 +187,9 @@ def test_forecast_next_requires_only_history_and_next_speaker(config, inputs):
     torch.testing.assert_close(mixed.emotion_probs[1], single.emotion_probs[0])
 
 
-def test_forecast_next_preserves_source_turn_gaps(config, inputs):
+def test_forecast_next_preserves_source_turn_gaps(any_config, inputs):
     embeddings, speakers = inputs
-    model = ShiftAware(config).eval()
+    model = ShiftAware(any_config).eval()
     gaps = torch.tensor([[0, 0, 0, 64, 3], [0, 3, 0, 0, 0]])
     full = model(embeddings, speakers, turn_gaps=gaps)
     forecast = model.forecast_next(
@@ -254,8 +261,8 @@ def test_joint_training_under_bfloat16_autocast(inputs, backend, gate, prior, ev
         )
 
 
-def test_first_turn_only_dialogues_have_no_shift_loss(config):
-    model = ShiftAware(config)
+def test_first_turn_only_dialogues_have_no_shift_loss(any_config):
+    model = ShiftAware(any_config)
     output = model(torch.randn(1, 3, 12), torch.tensor([[0, 1, 2]]))
     losses = ShiftAwareLoss()(output, torch.tensor([[0, 1, 2]]), torch.full((1, 3), torch.nan))
     assert losses["shift"] == 0 and losses["forecast_shift"] == 0
@@ -279,6 +286,99 @@ def test_component_loss_supervises_prior_and_evidence_directly(config):
     model.zero_grad()
     losses["prior"].backward()
     assert model.heads.prior[-1].weight.grad.abs().sum() > 0
+
+
+@pytest.fixture
+def transformer_config():
+    return ShiftAwareConfig(
+        input_dim=12, hidden_dim=16, time_dim=4, num_heads=2, dropout=0, dynamics="transformer"
+    )
+
+
+def test_transformer_distributions_causality_and_attention(transformer_config, inputs):
+    embeddings, speakers = inputs
+    model = ShiftAware(transformer_config).eval()
+    assert not hasattr(model, "heads")  # no prior, gate or mixture
+    output = model(embeddings, speakers, return_attention=True)
+    mask = speakers >= 0
+    torch.testing.assert_close(output.emotion_probs.sum(-1), mask.float())
+    torch.testing.assert_close(output.forecast_emotion_probs.sum(-1), mask.float())
+    torch.testing.assert_close(
+        output.emotion_probs, output.evidence_logits.softmax(-1) * mask[..., None]
+    )
+    assert output.shift_mask.tolist() == [
+        [False, False, False, True, True],
+        [False, True, False, False, False],
+    ]
+    assert output.attention_weights is not None and output.attention_null_weights is not None
+    assert output.forecast_attention_weights is not None
+    earlier = torch.ones(5, 5, dtype=torch.bool).tril(-1)
+    allowed = earlier & mask[:, :, None] & mask[:, None, :]
+    for weights in (output.attention_weights, output.forecast_attention_weights):
+        assert not weights[~allowed].any()
+    torch.testing.assert_close(
+        output.attention_weights.sum(-1) + output.attention_null_weights, mask.float()
+    )
+
+    changed = embeddings.clone()
+    changed[:, 3:] = 100 * torch.randn_like(changed[:, 3:])
+    modified = model(changed, speakers)
+    for name in ("emotion_log_probs", "shift_logits"):
+        torch.testing.assert_close(getattr(output, name)[:, :3], getattr(modified, name)[:, :3])
+    for name in ("forecast_emotion_logits", "forecast_shift_logits"):
+        torch.testing.assert_close(getattr(output, name)[:, :4], getattr(modified, name)[:, :4])
+    differentiable = embeddings.clone().requires_grad_()
+    forecast = model(differentiable, speakers).forecast_emotion_logits[0, 3, 0]
+    gradient = torch.autograd.grad(forecast, differentiable)[0]
+    assert not gradient[:, 3:].any() and not gradient[1].any()
+    assert gradient[0, :3].abs().sum() > 0
+
+
+def test_utterance_only_transformer_reads_only_the_current_turn(transformer_config, inputs):
+    embeddings, speakers = inputs
+    config = ShiftAwareConfig(**{**transformer_config.__dict__, "context_layers": 0})
+    model = ShiftAware(config).eval()
+    output = model(embeddings, speakers, return_attention=True)
+    changed = embeddings.clone()
+    changed[:, [0, 1, 3]] = torch.randn_like(changed[:, [0, 1, 3]])
+    modified = model(changed, speakers)
+    for name in ("emotion_log_probs", "shift_logits"):
+        torch.testing.assert_close(getattr(output, name)[:, 2], getattr(modified, name)[:, 2])
+    assert output.attention_null_weights is not None
+    torch.testing.assert_close(output.attention_null_weights, (speakers >= 0).float())
+
+
+@pytest.mark.parametrize("layers", [0, 2])
+def test_transformer_training_under_bfloat16_autocast(inputs, layers):
+    torch.manual_seed(0)
+    model = ShiftAware(
+        ShiftAwareConfig(
+            input_dim=12,
+            hidden_dim=16,
+            time_dim=4,
+            num_heads=2,
+            dropout=0.1,
+            dynamics="transformer",
+            context_layers=layers,
+        )
+    )
+    embeddings, speakers = inputs
+    labels = torch.tensor([[0, 1, 3, 2, 4], [0, 2, 1, -100, -100]])
+    targets = torch.tensor([[0.0, 0.0, 0.0, 1.0, 1.0], [0.0, 1.0, 0.0, 0.0, 0.0]])
+    with torch.autocast("cpu", dtype=torch.bfloat16):
+        losses = ShiftAwareLoss(class_weights=torch.arange(1, 8).float())(
+            model(embeddings, speakers), labels, targets
+        )
+    assert all(torch.isfinite(value) for value in losses.values())
+    losses["total"].backward()
+    for module in (
+        model.utterance_projection,
+        model.transformer.emotion,
+        model.transformer.shift,
+        model.transformer.forecast_attention,
+        *model.transformer.layers,
+    ):
+        assert sum(p.grad.abs().sum() for p in module.parameters() if p.grad is not None) > 0
 
 
 def test_gated_delta_rank_one_update_matches_dense_equation():
@@ -442,6 +542,8 @@ def test_real_roberta_adapter_without_pretrained_download(config):
         {"prior": "unknown"},
         {"evidence": "unknown"},
         {"mixing": "unknown"},
+        {"dynamics": "unknown"},
+        {"context_layers": -1},
         {"num_emotions": 3},
     ],
 )

@@ -25,12 +25,25 @@ class ShiftAwareConfig:
     # "product": P(evidence) * P(prior) ** (1 - beta), renormalized.
     mixing: Literal["probability", "product"] = "probability"
     num_emotions: int = len(EMOTIONS)
+    # "recurrent": turn-by-turn memories, retrieval and the prior/evidence gate.
+    # "transformer": one parallel causal pass; gate, prior, evidence and mixing
+    # settings are ignored. context_layers=0 gives the utterance-only baseline.
+    dynamics: Literal["recurrent", "transformer"] = "recurrent"
+    context_layers: int = 1
 
     def __post_init__(self):
         for name in ("input_dim", "hidden_dim", "time_dim", "num_heads", "distance_buckets"):
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
                 raise ValueError(f"{name} must be a positive integer")
+        if (
+            not isinstance(self.context_layers, int)
+            or isinstance(self.context_layers, bool)
+            or self.context_layers < 0
+        ):
+            raise ValueError("context_layers must be a nonnegative integer")
+        if self.dynamics not in ("recurrent", "transformer"):
+            raise ValueError("dynamics must be 'recurrent' or 'transformer'")
         if self.hidden_dim % self.num_heads:
             raise ValueError("hidden_dim must be divisible by num_heads")
         if not 0 <= self.dropout < 1:
