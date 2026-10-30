@@ -2,7 +2,8 @@
 
 Recognizing, anticipating and explaining emotional turning points in conversation.
 We test where conversational context helps or hurts at the moments a speaker's
-emotion changes, on MELD and DailyDialog.
+emotion changes, on MELD and DailyDialog, with EmoWOZ integrated as a third
+dataset through an explicitly documented mapping to the shared label space.
 
 **Team members: read the hand-in standards first —
 [`docs/TEAM_GUIDE.pdf`](docs/TEAM_GUIDE.pdf) (2 pages) or [`docs/TEAM_GUIDE.md`](docs/TEAM_GUIDE.md).**
@@ -18,6 +19,7 @@ emotion changes, on MELD and DailyDialog.
 | 5 | Context-aware RoBERTa | Anqi | claimed |
 | 6 | ShiftAware (speaker / shift-aware) | open | — |
 | — | Demo, slides and video integration | Lixian | in progress |
+| — | EmoWOZ dataset integration | Rachel (13ray) | ✅ implemented and tested: [integration README](docs/EMOWOZ.md) |
 
 Shared pieces already in the repo, for everyone to reuse: data pipeline, shift
 labels, metrics, efficiency helpers, prediction format, tests.
@@ -34,7 +36,7 @@ uv run pytest                    # data rules, pilot numbers, metrics, model int
 
 ```python
 from emotionshift.data.loaders import load
-df = load("meld")        # or "dailydialog"; one row per utterance
+df = load("meld")        # or "dailydialog" / "emowoz"; one row per labelled utterance
 # columns: dataset, split, dialogue_id, turn, speaker, text, emotion, prev_emotion, stratum, shift_type
 ```
 
@@ -131,4 +133,38 @@ and never committed.
 
 ## EmoWOZ (third dataset)
 
-See [docs/EMOWOZ.md](docs/EMOWOZ.md) for official downloads, preserved native labels, the explicit lossy mapping, statistics, and VS Code setup. Load with load('emowoz'). Existing datasets and shift rules are unchanged.
+**Contributor: Rachel ([13ray](https://github.com/13ray)).**
+Detailed README: **[EmoWOZ integration, label mapping and run instructions](docs/EMOWOZ.md)**.
+
+EmoWOZ adds task-oriented user dialogue to the shared pipeline. The loader uses
+the official train/dev/test partitions and returns the shared ten columns plus
+`emotion_original_id`, `emotion_original`, and `source`. Unlabelled system
+utterances are excluded from targets; native labels and original turn indices
+are retained. The seven-class mapping is lossy and documented in the linked
+README. Shift labels use the existing same-speaker definition.
+
+```bash
+uv run python scripts/fetch_emowoz.py
+uv run python scripts/emowoz_stats.py
+uv run pytest
+```
+
+```python
+from emotionshift.data.loaders import load
+emowoz = load("emowoz")
+```
+
+| Official split | User utterances | Dialogues |
+|---|---:|---:|
+| Train | 66,474 | 9,233 |
+| Dev | 8,509 | 1,100 |
+| Test | 8,634 | 1,100 |
+| Total | 83,617 | 11,433 |
+
+Reproducible [summary JSON](reports/emowoz/summary.json) and
+[native-label counts](reports/emowoz/native_labels.csv) are included in
+[`reports/emowoz/`](reports/emowoz/), alongside shared-label and shift tables.
+Validation: **20 passed, 2 skipped** in the integration environment; existing
+MELD/DailyDialog regression tests pass. No trained-model results are claimed.
+Official source: [EmoWOZ release](https://zenodo.org/records/6506504),
+licensed CC BY-NC 4.0. Raw data is downloaded locally and never committed.
