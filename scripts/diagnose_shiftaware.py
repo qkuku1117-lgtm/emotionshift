@@ -98,6 +98,18 @@ def main():
             name: round(float(roc_auc_score(a["shift"][eligible], a[name][eligible])), 4)
             for name in ("shift_prob", "forecast_shift_prob")
         },
+        # Final predictions by stratum, as in the stratified test reports.
+        "strata": {
+            stratum: {
+                key: round(float(value), 4)
+                for key, value in scores(
+                    [gold[i] for i in np.flatnonzero(rows)],
+                    [EMOTIONS[i] for i in a["mixture"][rows]],
+                ).items()
+                if key in ("n", "weighted_f1", "micro_f1_no_neutral")
+            }
+            for stratum, rows in (("first", ~eligible), ("stable", stable), ("shift", shifted))
+        },
     }
     print(json.dumps(result, indent=1))
 
