@@ -16,6 +16,8 @@ dependencies = [
 [project.optional-dependencies]
 # B3 RoBERTa (and the other transformer models): pip install -e ".[transformers]"
 transformers = ["torch>=2.1", "transformers>=4.41", "accelerate>=0.26"]
+# B2 BiGRU / BiLSTM: pip install -e ".[rnn]"
+rnn = ["torch>=2.4", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29"]
 
 [dependency-groups]
 dev = ["pytest>=8"]

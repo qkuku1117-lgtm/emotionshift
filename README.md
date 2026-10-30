@@ -13,8 +13,8 @@ emotion changes, on MELD and DailyDialog.
 |---|---|---|---|
 | 1 | Majority / emotional-inertia baseline | open | — |
 | 2 | TF-IDF + linear SVM | Lixian | ✅ done: [`docs/B1_TFIDF_SVM.md`](docs/B1_TFIDF_SVM.md) |
-| 3 | BiGRU / BiLSTM | Thanh | claimed |
-| 4 | Transformer, utterance only (proposal: RoBERTa-base) | KL Y | ✅ done: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md) |
+| 3 | BiGRU / BiLSTM | Thanh | ✅ done, merged 30 Oct: [`docs/B2_BIGRU_BILSTM.md`](docs/B2_BIGRU_BILSTM.md) |
+| 4 | Transformer, utterance only (RoBERTa-base) | KL Y | ✅ done, merged 30 Oct: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md); trained models on Google Drive |
 | 5 | Context-aware RoBERTa | Anqi | claimed |
 | 6 | ShiftAware (speaker / shift-aware) | open | — |
 | — | Demo, slides and video integration | Lixian | in progress |
@@ -27,8 +27,9 @@ labels, metrics, efficiency helpers, prediction format, tests.
 ```bash
 uv sync                          # or: pip install numpy pandas scikit-learn scipy joblib pyyaml matplotlib pytest
 bash scripts/fetch_data.sh       # downloads MELD + DailyDialog into data/raw/ (not in Git)
-uv run pytest                    # 15 checks: data rules, pilot numbers, metrics, B1 interface
-                                 # (+6 B3 checks with the transformer extra: uv sync --extra transformers)
+uv run pytest                    # data rules, pilot numbers, metrics, model interfaces
+                                 # B2 checks need the rnn extra (uv sync --extra rnn),
+                                 # B3 checks the transformers extra (uv sync --extra transformers); skipped without them
 ```
 
 ```python
@@ -106,15 +107,17 @@ E.latency_ms(model.predict, texts)   # E9: per-utterance CPU latency (median, p9
 
 ```
 emotionshift/data/       loaders.py (one Dialogue/Turn table), labels.py, shifts.py
-emotionshift/models/     tfidf.py (#2), roberta.py (#4)  · add your model here
+emotionshift/models/     tfidf.py (#2), birnn.py (#3), roberta.py (#4)  · add your model here
 emotionshift/eval/       metrics.py, efficiency.py, plots.py
-configs/                 one YAML per experiment (b1_tfidf.yaml, b3_roberta.yaml)
-scripts/                 fetch_data.sh, train_b1.py, make_notebook.py, make_team_guide_pdf.py,
+configs/                 one YAML per experiment (b1_tfidf.yaml, b2_birnn.yaml, b3_roberta.yaml)
+scripts/                 fetch_data.sh (fetch_data.py: same, cross-platform), train_b1.py, make_notebook.py,
+                         make_team_guide_pdf.py, train_b2.py, make_b2_artifacts.py, verify_b2.py,
                          train_b3.py, analyse_b3.py, make_notebook_b3.py
-notebooks/               executed walkthroughs (b1_tfidf_svm.ipynb, b3_roberta.ipynb)
-tests/                   test_data.py, test_tfidf.py, test_roberta.py
-reports/                 results tables and figures per model (reports/b1/, reports/b3/)
+notebooks/               executed walkthroughs (b1_tfidf_svm.ipynb, b2_bigru_bilstm.ipynb, b3_roberta.ipynb)
+tests/                   test_data.py, test_tfidf.py, test_birnn.py, test_roberta.py
+reports/                 results tables and figures per model (reports/b1/, reports/b2/, reports/b3/)
 predictions/             shared-format prediction CSVs
+models/                  small demo checkpoints only (b2_*.pt); large models live on Google Drive
 docs/                    team guide, per-model write-ups
 deliverables/            temporary collection folders for the video (removed before submission)
 ```
