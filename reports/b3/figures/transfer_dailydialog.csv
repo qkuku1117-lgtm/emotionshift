@@ -1,0 +1,5 @@
+model,split,n,micro_f1_no_neutral,macro_f1,weighted_f1,derived_shift_f1
+trained on MELD (transfer),test_dedup,7019,40.92,32.0,80.15,42.61
+trained on MELD (transfer),test,7740,40.06,31.58,79.62,41.85
+trained on DailyDialog,test_dedup,7019,55.34,39.69,84.8,52.28
+trained on DailyDialog,test,7740,55.3,41.52,84.65,51.72

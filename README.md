@@ -14,7 +14,7 @@ emotion changes, on MELD and DailyDialog.
 | 1 | Majority / emotional-inertia baseline | open | — |
 | 2 | TF-IDF + linear SVM | Lixian | ✅ done: [`docs/B1_TFIDF_SVM.md`](docs/B1_TFIDF_SVM.md) |
 | 3 | BiGRU / BiLSTM | Thanh | claimed |
-| 4 | Transformer, utterance only (proposal: RoBERTa-base) | KL Y | claimed |
+| 4 | Transformer, utterance only (proposal: RoBERTa-base) | KL Y | ✅ done: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md) |
 | 5 | Context-aware RoBERTa | Anqi | claimed |
 | 6 | ShiftAware (speaker / shift-aware) | open | — |
 | — | Demo, slides and video integration | Lixian | in progress |
@@ -28,6 +28,7 @@ labels, metrics, efficiency helpers, prediction format, tests.
 uv sync                          # or: pip install numpy pandas scikit-learn scipy joblib pyyaml matplotlib pytest
 bash scripts/fetch_data.sh       # downloads MELD + DailyDialog into data/raw/ (not in Git)
 uv run pytest                    # 15 checks: data rules, pilot numbers, metrics, B1 interface
+                                 # (+6 B3 checks with the transformer extra: uv sync --extra transformers)
 ```
 
 ```python
@@ -105,13 +106,14 @@ E.latency_ms(model.predict, texts)   # E9: per-utterance CPU latency (median, p9
 
 ```
 emotionshift/data/       loaders.py (one Dialogue/Turn table), labels.py, shifts.py
-emotionshift/models/     tfidf.py (#2)  · add your model here
+emotionshift/models/     tfidf.py (#2), roberta.py (#4)  · add your model here
 emotionshift/eval/       metrics.py, efficiency.py, plots.py
-configs/                 one YAML per experiment (b1_tfidf.yaml)
-scripts/                 fetch_data.sh, train_b1.py, make_notebook.py, make_team_guide_pdf.py
-notebooks/               executed walkthroughs (b1_tfidf_svm.ipynb)
-tests/                   test_data.py, test_tfidf.py
-reports/                 results tables and figures per model (reports/b1/)
+configs/                 one YAML per experiment (b1_tfidf.yaml, b3_roberta.yaml)
+scripts/                 fetch_data.sh, train_b1.py, make_notebook.py, make_team_guide_pdf.py,
+                         train_b3.py, analyse_b3.py, make_notebook_b3.py
+notebooks/               executed walkthroughs (b1_tfidf_svm.ipynb, b3_roberta.ipynb)
+tests/                   test_data.py, test_tfidf.py, test_roberta.py
+reports/                 results tables and figures per model (reports/b1/, reports/b3/)
 predictions/             shared-format prediction CSVs
 docs/                    team guide, per-model write-ups
 deliverables/            temporary collection folders for the video (removed before submission)

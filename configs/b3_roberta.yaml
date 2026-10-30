@@ -1,0 +1,37 @@
+# B3: RoBERTa-base fine-tuned on single utterances (Table 4 #4).
+# Same protocol as B1: the best epoch is chosen on DEV only, each seed is
+# scored once on test. Run on a GPU (Colab T4: about 70 minutes for everything).
+
+datasets: [meld, dailydialog]
+seeds: [0, 1, 2, 3, 4]    # proposal R4 (>= 3) and E1 headline rows (5)
+bootstrap: 1000           # dialogue-level bootstrap resamples for 95% CIs
+
+model:
+  model_name: roberta-base
+  lr: 1.0e-5
+  batch_size: 32
+  max_len: 128
+  warmup: 0.1
+  weight_decay: 0.01
+  class_weight: null      # plain cross-entropy; class weights are B4+
+
+# DailyDialog has 87K training utterances (9x MELD), so it gets one epoch less.
+epochs:
+  meld: 4
+  dailydialog: 3
+
+# Dev selection metric per dataset (the dataset's standard headline metric).
+select_on:
+  meld: weighted_f1
+  dailydialog: micro_f1_no_neutral
+
+# Test splits to report. DailyDialog headline = de-duplicated test set.
+test_splits:
+  meld: [test]
+  dailydialog: [test_dedup, test]
+
+# Cross-domain transfer (E8): the MELD models, unchanged, scored on DailyDialog.
+transfer:
+  from: meld
+  to: dailydialog
+  splits: [test_dedup, test]

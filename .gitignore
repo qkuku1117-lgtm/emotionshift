@@ -1,5 +1,6 @@
 data/raw/
 models/*.joblib
+models/b3_*/
 __pycache__/
 *.pyc
 .venv/
