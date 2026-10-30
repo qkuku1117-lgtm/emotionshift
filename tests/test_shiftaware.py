@@ -33,6 +33,9 @@ def config():
     )
 
 
+DESIGNS = [("speaker", "full"), ("forecast", "local")]
+
+
 @pytest.fixture
 def inputs():
     torch.manual_seed(11)
@@ -78,7 +81,8 @@ def test_distributions_shift_eligibility_and_retrieval(config, inputs):
 
 
 @pytest.mark.parametrize("backend", ["gated_delta", "gru"])
-def test_future_and_current_text_cannot_leak_into_forecast(inputs, backend):
+@pytest.mark.parametrize(("prior", "evidence"), DESIGNS)
+def test_future_and_current_text_cannot_leak_into_forecast(inputs, backend, prior, evidence):
     model = ShiftAware(
         ShiftAwareConfig(
             input_dim=12,
@@ -87,6 +91,8 @@ def test_future_and_current_text_cannot_leak_into_forecast(inputs, backend):
             num_heads=2,
             dropout=0,
             global_memory=backend,
+            prior=prior,
+            evidence=evidence,
         )
     ).eval()
     embeddings, speakers = inputs
@@ -200,7 +206,8 @@ def test_forecast_next_preserves_source_turn_gaps(config, inputs):
 
 @pytest.mark.parametrize("backend", ["gated_delta", "gru"])
 @pytest.mark.parametrize("gate", ["learned", "tied"])
-def test_joint_training_under_bfloat16_autocast(inputs, backend, gate):
+@pytest.mark.parametrize(("prior", "evidence"), DESIGNS)
+def test_joint_training_under_bfloat16_autocast(inputs, backend, gate, prior, evidence):
     model = ShiftAware(
         ShiftAwareConfig(
             input_dim=12,
@@ -210,6 +217,8 @@ def test_joint_training_under_bfloat16_autocast(inputs, backend, gate):
             dropout=0,
             global_memory=backend,
             gate=gate,
+            prior=prior,
+            evidence=evidence,
         )
     )
     embeddings, speakers = inputs
@@ -233,6 +242,8 @@ def test_joint_training_under_bfloat16_autocast(inputs, backend, gate):
         assert sum(p.grad.abs().sum() for p in module.parameters() if p.grad is not None) > 0
     optimizer.step()
     assert not torch.equal(before, model.heads.evidence_emotion.weight)
+    if prior == "forecast":
+        torch.testing.assert_close(output.prior_logits, output.forecast_emotion_logits)
     if gate == "tied":
         torch.testing.assert_close(
             output.mixing_weights, output.shift_logits.sigmoid() * output.turn_mask
@@ -246,6 +257,24 @@ def test_first_turn_only_dialogues_have_no_shift_loss(config):
     assert losses["shift"] == 0 and losses["forecast_shift"] == 0
     losses["total"].backward()
     assert torch.isfinite(losses["total"])
+
+
+def test_component_loss_supervises_prior_and_evidence_directly(config):
+    torch.manual_seed(0)
+    model = ShiftAware(config)
+    output = model(torch.randn(1, 4, 12), torch.tensor([[0, 1, 0, 1]]))
+    labels, targets = torch.tensor([[0, 1, 2, 3]]), torch.tensor([[0.0, 0.0, 1.0, 0.0]])
+    plain = ShiftAwareLoss()(output, labels, targets)
+    losses = ShiftAwareLoss(component_weight=0.5)(output, labels, targets)
+    torch.testing.assert_close(
+        losses["total"], plain["total"] + 0.5 * (losses["prior"] + losses["evidence"])
+    )
+    torch.testing.assert_close(
+        losses["prior"], nn.functional.cross_entropy(output.prior_logits[0], labels[0])
+    )
+    model.zero_grad()
+    losses["prior"].backward()
+    assert model.heads.prior[-1].weight.grad.abs().sum() > 0
 
 
 def test_gated_delta_rank_one_update_matches_dense_equation():
@@ -406,6 +435,8 @@ def test_real_roberta_adapter_without_pretrained_download(config):
         {"dropout": 1},
         {"global_memory": "unknown"},
         {"gate": "unknown"},
+        {"prior": "unknown"},
+        {"evidence": "unknown"},
         {"num_emotions": 3},
     ],
 )

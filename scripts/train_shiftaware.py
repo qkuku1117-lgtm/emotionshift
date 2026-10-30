@@ -11,7 +11,7 @@ import random
 import subprocess
 import time
 from contextlib import nullcontext
-from dataclasses import asdict, replace
+from dataclasses import asdict, fields, replace
 from importlib import import_module
 from pathlib import Path
 from typing import Any, cast
@@ -41,6 +41,9 @@ from emotionshift.models.shiftaware.training import (
     move_batch,
     train_epoch,
 )
+
+TRAINING_KEYS = {f.name for f in fields(TrainingConfig)}
+ARCHITECTURE_KEYS = {f.name for f in fields(ShiftAwareConfig)}
 
 
 def read_settings(path: Path) -> dict:
@@ -74,7 +77,7 @@ def log_line(row: dict) -> None:
 @torch.inference_mode()
 def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float]:
     model.eval()
-    gold, predicted, shifts, shift_predictions = [], [], [], []
+    gold, predicted, shifts, shift_predictions, gates = [], [], [], [], []
     loss_sum = 0.0
     count = 0
     for cpu_batch in loader:
@@ -93,12 +96,15 @@ def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float
         predicted.extend(output.emotion_probs[valid].argmax(-1).cpu().tolist())
         shifts.extend(batch["shift_labels"][eligible].int().cpu().tolist())
         shift_predictions.extend((output.shift_probs[eligible] >= 0.5).int().cpu().tolist())
+        gates.extend(output.mixing_weights[eligible].float().cpu().tolist())
         n = int(valid.sum())
         loss_sum += loss.item() * n
         count += n
     if not count:
         raise ValueError("Dev loader must be nonempty")
     metrics = scores([EMOTIONS[i] for i in gold], [EMOTIONS[i] for i in predicted])
+    # Mean weight on the evidence head; near 1 on both groups means the gate collapsed.
+    gate, shifted = np.array(gates), np.array(shifts, dtype=bool)
     return {
         "loss": loss_sum / count,
         "weighted_f1": float(metrics["weighted_f1"]),
@@ -106,6 +112,8 @@ def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float
         "micro_f1_no_neutral": float(metrics["micro_f1_no_neutral"]),
         "shift_f1": float(f1_score(shifts, shift_predictions, zero_division=0)) if shifts else 0.0,
         "n": count,
+        "gate_shift": float(gate[shifted].mean()) if shifted.any() else None,
+        "gate_stable": float(gate[~shifted].mean()) if (~shifted).any() else None,
         "n_shift_eligible": len(shifts),
     }
 
@@ -126,14 +134,29 @@ def main():
     parser.add_argument(
         "--class-weighting", help="Override class_weighting (none, sqrt_inverse, inverse)"
     )
+    parser.add_argument(
+        "--set",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Override a training or architecture setting, e.g. gate=tied; repeatable",
+    )
     args = parser.parse_args()
 
-    settings = TrainingConfig(**read_settings(args.training_config))
+    training_settings = read_settings(args.training_config)
+    architecture_settings = read_settings(args.architecture)
+    for item in args.set:
+        key, sep, value = item.partition("=")
+        target = training_settings if key in TRAINING_KEYS else architecture_settings
+        if not sep or key not in TRAINING_KEYS | ARCHITECTURE_KEYS:
+            raise ValueError(f"--set expects KEY=VALUE with a known key, got {item!r}")
+        target[key] = yaml.safe_load(value)
+    settings = TrainingConfig(**training_settings)
     if args.seed is not None:
         settings = replace(settings, seed=args.seed)
     if args.class_weighting is not None:
         settings = replace(settings, class_weighting=args.class_weighting)
-    architecture = ShiftAwareConfig(**read_settings(args.architecture))
+    architecture = ShiftAwareConfig(**architecture_settings)
     device = torch.device(args.device)
     dtype = autocast_dtype(device, settings.amp)
     random.seed(settings.seed)
@@ -165,6 +188,7 @@ def main():
         class_weights=class_weights,
         shift_weight=settings.shift_weight,
         forecast_weight=settings.forecast_weight,
+        component_weight=settings.component_weight,
     ).to(device)
 
     collator = DialogueCollator(tokenizer, max_length=settings.max_length)

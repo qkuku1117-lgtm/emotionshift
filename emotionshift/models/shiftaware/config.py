@@ -16,6 +16,11 @@ class ShiftAwareConfig:
     dropout: float = 0.1
     global_memory: Literal["gated_delta", "gru"] = "gated_delta"
     gate: Literal["learned", "tied"] = "learned"
+    # "forecast" reuses the history-only forecast head as the inertia prior.
+    prior: Literal["speaker", "forecast"] = "speaker"
+    # "local" limits evidence to the utterance and other speakers' turns, leaving
+    # the speaker's own trajectory to the prior; the shift head still sees both.
+    evidence: Literal["full", "local"] = "full"
     num_emotions: int = len(EMOTIONS)
 
     def __post_init__(self):
@@ -31,5 +36,9 @@ class ShiftAwareConfig:
             raise ValueError("global_memory must be 'gated_delta' or 'gru'")
         if self.gate not in ("learned", "tied"):
             raise ValueError("gate must be 'learned' or 'tied'")
+        if self.prior not in ("speaker", "forecast"):
+            raise ValueError("prior must be 'speaker' or 'forecast'")
+        if self.evidence not in ("full", "local"):
+            raise ValueError("evidence must be 'full' or 'local'")
         if self.num_emotions != len(EMOTIONS):
             raise ValueError("Use the shared seven-emotion label space")

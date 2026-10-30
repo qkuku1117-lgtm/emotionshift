@@ -42,6 +42,7 @@ class TrainingConfig:
     class_weighting: str = "none"
     shift_weight: float = 1.0
     forecast_weight: float = 0.5
+    component_weight: float = 0.0
 
     def __post_init__(self):
         for name in ("epochs", "batch_size", "gradient_accumulation_steps", "max_length"):
@@ -63,6 +64,7 @@ class TrainingConfig:
             "min_delta",
             "shift_weight",
             "forecast_weight",
+            "component_weight",
         ):
             value = getattr(self, name)
             if not math.isfinite(value) or value < 0:

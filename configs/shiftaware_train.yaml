@@ -20,3 +20,4 @@ freeze_encoder: false
 class_weighting: sqrt_inverse  # none | sqrt_inverse | inverse; chosen on MELD dev over 5 seeds
 shift_weight: 1.0
 forecast_weight: 0.5
+component_weight: 0.0  # extra CE on the prior and evidence heads separately

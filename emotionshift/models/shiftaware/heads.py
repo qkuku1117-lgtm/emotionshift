@@ -27,12 +27,20 @@ class PredictionHeads(nn.Module):
         super().__init__()
         d, c, td = config.hidden_dim, config.num_emotions, config.time_dim
         self.gate_kind = config.gate
-        self.prior = nn.Sequential(projection(d + c + td, d, config.dropout), nn.Linear(d, c))
+        self.prior = (
+            nn.Sequential(projection(d + c + td, d, config.dropout), nn.Linear(d, c))
+            if config.prior == "speaker"
+            else None
+        )
         self.forecast = projection(3 * d + c + td, d, config.dropout)
         self.forecast_emotion = nn.Linear(d, c)
         self.forecast_shift = nn.Linear(d, 1)
-        self.evidence = projection(4 * d + c + td, d, config.dropout)
+        full = 4 * d + c + td
+        local = config.evidence == "local"
+        self.evidence = projection(2 * d + td if local else full, d, config.dropout)
         self.evidence_emotion = nn.Linear(d, c)
+        # With local evidence the shift detector needs its own view of the history.
+        self.shift_hidden = projection(full, d, config.dropout) if local else None
         self.shift = nn.Linear(d, 1)
         self.gate = nn.Linear(d + 1, 1) if config.gate == "learned" else None
 
@@ -41,17 +49,37 @@ class PredictionHeads(nn.Module):
         hidden = self.forecast(inputs)
         return self.forecast_emotion(hidden), self.forecast_shift(hidden).squeeze(-1)
 
-    def forward(self, utterance, speaker, global_summary, interaction, previous_probs, time):  # ty: ignore[invalid-mutable-override]
-        prior_logits = self.prior(torch.cat((speaker, previous_probs, time), dim=-1))
-        hidden = self.evidence(
-            torch.cat((utterance, speaker, global_summary, interaction, previous_probs, time), -1)
+    def forward(  # ty: ignore[invalid-mutable-override]
+        self,
+        utterance,
+        speaker,
+        global_summary,
+        interaction,
+        previous_probs,
+        time,
+        forecast_logits,
+    ):
+        prior_logits = (
+            forecast_logits
+            if self.prior is None
+            else self.prior(torch.cat((speaker, previous_probs, time), dim=-1))
         )
+        full = torch.cat(
+            (utterance, speaker, global_summary, interaction, previous_probs, time), -1
+        )
+        if self.shift_hidden is None:
+            hidden = shift_hidden = self.evidence(full)
+        else:
+            hidden = self.evidence(torch.cat((utterance, interaction, time), -1))
+            shift_hidden = self.shift_hidden(full)
         evidence_logits = self.evidence_emotion(hidden)
-        shift_logits = self.shift(hidden).squeeze(-1)
+        shift_logits = self.shift(shift_hidden).squeeze(-1)
         gate_logits = (
             shift_logits
             if self.gate is None
-            else self.gate(torch.cat((hidden, shift_logits.sigmoid()[:, None]), -1)).squeeze(-1)
+            else self.gate(torch.cat((shift_hidden, shift_logits.sigmoid()[:, None]), -1)).squeeze(
+                -1
+            )
         )
         # Mix probabilities in log space to avoid log(0) when a gate saturates.
         log_probs = torch.logaddexp(

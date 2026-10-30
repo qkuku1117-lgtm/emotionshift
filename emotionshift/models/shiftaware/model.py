@@ -186,7 +186,13 @@ class ShiftAware(nn.Module):
             query = self.evidence_query(torch.cat((x[:, t], own, global_state.summary, time), -1))
             interaction = self.attention(query, *retrieval_inputs)
             prediction = self.heads(
-                x[:, t], own, global_state.summary, interaction.context, previous, time
+                x[:, t],
+                own,
+                global_state.summary,
+                interaction.context,
+                previous,
+                time,
+                forecast_emotion,
             )
             values = {
                 "emotion_log_probs": prediction.emotion_log_probs,
