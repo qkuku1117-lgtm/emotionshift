@@ -39,13 +39,20 @@ class TrainingConfig:
     log_every: int = 20
     amp: str = "auto"
     freeze_encoder: bool = False
+    encoder_chunk_size: int = 64
     class_weighting: str = "none"
     shift_weight: float = 1.0
     forecast_weight: float = 0.5
     component_weight: float = 0.0
 
     def __post_init__(self):
-        for name in ("epochs", "batch_size", "gradient_accumulation_steps", "max_length"):
+        for name in (
+            "epochs",
+            "batch_size",
+            "gradient_accumulation_steps",
+            "max_length",
+            "encoder_chunk_size",
+        ):
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
                 raise ValueError(f"{name} must be a positive integer")

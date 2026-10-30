@@ -1,8 +1,8 @@
 # Starting settings for end-to-end text training. Select the best epoch on dev.
 # These are configurable defaults, not dataset-tuned hyperparameters.
 epochs: 10
-batch_size: 4
-gradient_accumulation_steps: 4
+batch_size: 16  # dialogues per optimizer update; one pass is 2x faster than 4 x 4 accumulation
+gradient_accumulation_steps: 1
 encoder_lr: 0.00002
 dynamics_lr: 0.0003
 weight_decay: 0.01
@@ -12,11 +12,12 @@ max_grad_norm: 1.0
 patience: 3
 min_delta: 0.0
 max_length: 128
-num_workers: 0
+num_workers: 2
 seed: 42
 log_every: 20  # optimizer updates between progress lines; 0 disables
 amp: auto
 freeze_encoder: false
+encoder_chunk_size: 256  # utterances per encoder call; bounds activation memory
 class_weighting: sqrt_inverse  # none | sqrt_inverse | inverse; chosen on MELD dev over 5 seeds
 shift_weight: 1.0
 forecast_weight: 0.5

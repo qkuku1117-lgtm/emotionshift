@@ -178,6 +178,7 @@ def main():
     encoder = TransformerUtteranceEncoder.from_pretrained(
         args.model_name,
         frozen=settings.freeze_encoder,
+        chunk_size=settings.encoder_chunk_size,
         local_files_only=args.local_files_only,
     )
     if encoder.embedding_dim != architecture.input_dim:
