@@ -32,7 +32,16 @@ HEADS = {
 
 @torch.inference_mode()
 def collect(model, loader, device, dtype) -> dict[str, np.ndarray]:
-    names = [*HEADS, "gold", "gate", "shift", "eligible", "shift_prob", "forecast_shift_prob"]
+    names = [
+        *HEADS,
+        "gold",
+        "gate",
+        "shift",
+        "eligible",
+        "shift_prob",
+        "forecast_shift_prob",
+        "derived_shift_prob",
+    ]
     parts: dict[str, list[torch.Tensor]] = {name: [] for name in names}
     for cpu_batch in loader:
         batch = move_batch(cpu_batch, device)
@@ -50,6 +59,19 @@ def collect(model, loader, device, dtype) -> dict[str, np.ndarray]:
         parts["eligible"].append((batch["shift_mask"] & output.shift_mask)[valid])
         parts["shift_prob"].append(output.shift_logits[valid].float().sigmoid())
         parts["forecast_shift_prob"].append(output.forecast_shift_logits[valid].float().sigmoid())
+        # Parameter-free shift score: chance that the speaker's previous and current
+        # predicted emotions differ. Only meaningful where the speaker spoke before.
+        probs = output.emotion_probs.float()
+        speakers, turns = batch["speaker_ids"], valid.shape[1]
+        positions = torch.arange(turns, device=device)
+        previous_own = (
+            (speakers[:, :, None] == speakers[:, None, :])
+            & (positions[:, None] > positions[None, :])
+            & valid[:, None, :]
+        )
+        last = torch.where(previous_own, positions, 0).amax(-1)
+        previous = probs.gather(1, last[..., None].expand(-1, -1, probs.shape[-1]))
+        parts["derived_shift_prob"].append((1 - (probs * previous).sum(-1))[valid])
     return {name: torch.cat(values).cpu().numpy() for name, values in parts.items()}
 
 
@@ -96,7 +118,7 @@ def main():
         },
         "shift_auroc": {
             name: round(float(roc_auc_score(a["shift"][eligible], a[name][eligible])), 4)
-            for name in ("shift_prob", "forecast_shift_prob")
+            for name in ("shift_prob", "forecast_shift_prob", "derived_shift_prob")
         },
         # Final predictions by stratum, as in the stratified test reports.
         "strata": {
