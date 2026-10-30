@@ -24,3 +24,15 @@ DAILYDIALOG_MAP = {
 # Valence used for shift typing (surprise is ambiguous, neutral has none).
 POSITIVE = {"joy"}
 NEGATIVE = {"anger", "sadness", "disgust", "fear"}
+
+# EmoWOZ's native taxonomy is not equivalent to the shared seven classes.
+# These are explicit, lossy project conventions; retain native IDs and names.
+EMOWOZ_LABELS = {
+    0: "neutral", 1: "fearful", 2: "dissatisfied", 3: "apologetic",
+    4: "abusive", 5: "excited", 6: "satisfied",
+}
+EMOWOZ_MAP = {
+    "neutral": "neutral", "fearful": "fear", "dissatisfied": "anger",
+    "apologetic": "sadness", "abusive": "anger", "excited": "joy",
+    "satisfied": "joy",
+}
