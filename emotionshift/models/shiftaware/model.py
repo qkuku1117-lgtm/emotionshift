@@ -278,13 +278,14 @@ class ShiftAware(nn.Module):
             forecast_attention = out["forecast_attention_weights"][..., :turns] * rows
         return ShiftAwareOutput(
             emotion_log_probs=out["emotion_log_probs"],
-            # The history-only forecast plays the prior's role; nothing is mixed.
+            # The history-only forecast plays the prior's role; it is mixed in
+            # only with fusion="shift_gate".
             prior_logits=out["forecast_emotion_logits"],
             evidence_logits=out["emotion_logits"],
             shift_logits=out["shift_logits"],
             forecast_emotion_logits=out["forecast_emotion_logits"],
             forecast_shift_logits=out["forecast_shift_logits"],
-            mixing_weights=turn_mask.float(),
+            mixing_weights=out["mixing_weights"],
             turn_mask=turn_mask,
             shift_mask=out["shift_mask"],
             attention_weights=attention,

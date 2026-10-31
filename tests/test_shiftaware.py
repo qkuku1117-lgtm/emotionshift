@@ -584,3 +584,45 @@ def test_unlabelled_turns_add_context_but_no_emotion_loss(any_config):
         ),
     )
     assert all(torch.isfinite(value) for value in losses.values())
+
+
+def test_shift_gate_mixes_the_forecast_in_by_one_minus_shift_probability(
+    transformer_config, inputs
+):
+    embeddings, speakers = inputs
+    config = ShiftAwareConfig(**{**transformer_config.__dict__, "fusion": "shift_gate"})
+    model = ShiftAware(config).eval()
+    output = model(embeddings, speakers)
+    mask = speakers >= 0
+    beta = output.shift_logits.sigmoid()
+    torch.testing.assert_close(output.mixing_weights[mask], beta[mask])
+    expected = (
+        output.evidence_logits.log_softmax(-1)
+        + (1 - beta)[..., None] * output.forecast_emotion_logits.log_softmax(-1)
+    ).softmax(-1)
+    torch.testing.assert_close(output.emotion_probs[mask], expected[mask])
+    torch.testing.assert_close(output.emotion_probs.sum(-1), mask.float())
+
+    # Still causal: changing turns 3+ leaves the recognition of turns 0-2 alone.
+    changed = embeddings.clone()
+    changed[:, 3:] = 100 * torch.randn_like(changed[:, 3:])
+    modified = model(changed, speakers)
+    torch.testing.assert_close(output.emotion_log_probs[:, :3], modified.emotion_log_probs[:, :3])
+
+    # The recognition loss alone trains the gate and the forecast.
+    model.train().zero_grad()
+    labels = torch.tensor([[0, 1, 3, 2, 4], [0, 2, 1, -100, -100]])
+    targets = torch.zeros(2, 5)
+    losses = ShiftAwareLoss(shift_weight=0, forecast_weight=0)(
+        model(embeddings, speakers), labels, targets
+    )
+    losses["total"].backward()
+    for module in (model.transformer.shift, model.transformer.forecast_emotion):
+        assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in module.parameters())
+
+
+def test_fusion_needs_transformer_dynamics():
+    with pytest.raises(ValueError, match="fusion"):
+        ShiftAwareConfig(fusion="shift_gate")
+    with pytest.raises(ValueError, match="fusion"):
+        ShiftAwareConfig(dynamics="transformer", fusion="mean")

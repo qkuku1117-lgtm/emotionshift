@@ -5,7 +5,8 @@ fed-back predictions and the prior/evidence gate) with one pass over all turns.
 Turn t attends to turns 0..t; speakers enter only as a same/other attention bias,
 so there are no identity embeddings and renaming speakers changes nothing.
 The forecast for turn t attends to turns strictly before t, plus a null slot,
-and never reads utterance t.
+and never reads utterance t. With fusion="shift_gate" that forecast is mixed
+back in as a prior, weighted by 1 - P(shift).
 """
 
 import math
@@ -110,6 +111,7 @@ class TransformerDynamics(nn.Module):
         self.forecast = projection(d, d, config.dropout)
         self.forecast_emotion = nn.Linear(d, c)
         self.forecast_shift = nn.Linear(d, 1)
+        self.fusion = config.fusion
 
     def forward(  # ty: ignore[invalid-mutable-override]
         self,
@@ -150,15 +152,24 @@ class TransformerDynamics(nn.Module):
         forecast = self.forecast(self.forecast_norm(query + forecast))
         mask = turn_mask[..., None]
         emotion_logits = self.emotion(h).float()
+        shift_logits = self.shift(h).squeeze(-1)
+        forecast_logits = self.forecast_emotion(forecast)
+        log_probs = emotion_logits.log_softmax(-1)
+        evidence_weight = torch.ones_like(shift_logits, dtype=torch.float)
+        if self.fusion == "shift_gate":
+            evidence_weight = shift_logits.float().sigmoid()
+            prior = forecast_logits.float().log_softmax(-1)
+            log_probs = (log_probs + (1 - evidence_weight)[..., None] * prior).log_softmax(-1)
         return {
-            "emotion_log_probs": emotion_logits.log_softmax(-1).masked_fill(~mask, 0),
+            "emotion_log_probs": log_probs.masked_fill(~mask, 0),
             "emotion_logits": emotion_logits.masked_fill(~mask, 0),
-            "shift_logits": self.shift(h).squeeze(-1).masked_fill(~turn_mask, 0),
-            "forecast_emotion_logits": self.forecast_emotion(forecast).masked_fill(~mask, 0),
+            "shift_logits": shift_logits.masked_fill(~turn_mask, 0),
+            "forecast_emotion_logits": forecast_logits.masked_fill(~mask, 0),
             "forecast_shift_logits": self.forecast_shift(forecast)
             .squeeze(-1)
             .masked_fill(~turn_mask, 0),
             "shift_mask": ~first & turn_mask,
+            "mixing_weights": evidence_weight * turn_mask,
             "attention_weights": weights,
             "forecast_attention_weights": forecast_weights,
         }

@@ -30,6 +30,10 @@ class ShiftAwareConfig:
     # settings are ignored. context_layers=0 gives the utterance-only baseline.
     dynamics: Literal["recurrent", "transformer"] = "recurrent"
     context_layers: int = 1
+    # Transformer only. "shift_gate": P(evidence) * P(forecast) ** (1 - P(shift)),
+    # renormalized, so the history-only forecast sharpens likely stable turns and
+    # steps aside on likely shifts. "none": recognition reads the evidence alone.
+    fusion: Literal["none", "shift_gate"] = "none"
 
     def __post_init__(self):
         for name in ("input_dim", "hidden_dim", "time_dim", "num_heads", "distance_buckets"):
@@ -58,5 +62,9 @@ class ShiftAwareConfig:
             raise ValueError("evidence must be 'full' or 'local'")
         if self.mixing not in ("probability", "product"):
             raise ValueError("mixing must be 'probability' or 'product'")
+        if self.fusion not in ("none", "shift_gate"):
+            raise ValueError("fusion must be 'none' or 'shift_gate'")
+        if self.fusion != "none" and self.dynamics != "transformer":
+            raise ValueError("fusion applies to dynamics='transformer' only")
         if self.num_emotions != len(EMOTIONS):
             raise ValueError("Use the shared seven-emotion label space")
