@@ -594,8 +594,12 @@ def test_shift_gate_mixes_the_forecast_in_by_one_minus_shift_probability(
     model = ShiftAware(config).eval()
     output = model(embeddings, speakers)
     mask = speakers >= 0
+    # Opening turns have no history to forecast from and read the evidence alone.
     beta = output.shift_logits.sigmoid()
+    beta[:, 0] = 1
     torch.testing.assert_close(output.mixing_weights[mask], beta[mask])
+    torch.testing.assert_close(output.emotion_probs[:, 0], output.evidence_logits[:, 0].softmax(-1))
+    assert (output.mixing_weights[:, 1:][mask[:, 1:]] < 1).all()
     expected = (
         output.evidence_logits.log_softmax(-1)
         + (1 - beta)[..., None] * output.forecast_emotion_logits.log_softmax(-1)

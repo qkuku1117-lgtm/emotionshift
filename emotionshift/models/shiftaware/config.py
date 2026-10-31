@@ -32,7 +32,8 @@ class ShiftAwareConfig:
     context_layers: int = 1
     # Transformer only. "shift_gate": P(evidence) * P(forecast) ** (1 - P(shift)),
     # renormalized, so the history-only forecast sharpens likely stable turns and
-    # steps aside on likely shifts. "none": recognition reads the evidence alone.
+    # steps aside on likely shifts; turns with no earlier turn skip the forecast.
+    # "none": recognition reads the evidence alone.
     fusion: Literal["none", "shift_gate"] = "none"
 
     def __post_init__(self):

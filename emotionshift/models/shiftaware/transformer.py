@@ -6,7 +6,7 @@ Turn t attends to turns 0..t; speakers enter only as a same/other attention bias
 so there are no identity embeddings and renaming speakers changes nothing.
 The forecast for turn t attends to turns strictly before t, plus a null slot,
 and never reads utterance t. With fusion="shift_gate" that forecast is mixed
-back in as a prior, weighted by 1 - P(shift).
+back in as a prior, weighted by 1 - P(shift), wherever an earlier turn exists.
 """
 
 import math
@@ -157,7 +157,10 @@ class TransformerDynamics(nn.Module):
         log_probs = emotion_logits.log_softmax(-1)
         evidence_weight = torch.ones_like(shift_logits, dtype=torch.float)
         if self.fusion == "shift_gate":
-            evidence_weight = shift_logits.float().sigmoid()
+            # With no earlier turn the forecast sees only its null slot, a fixed
+            # opening guess; such turns read the evidence alone.
+            history = (earlier & keys).any(-1)
+            evidence_weight = shift_logits.float().sigmoid().masked_fill(~history, 1)
             prior = forecast_logits.float().log_softmax(-1)
             log_probs = (log_probs + (1 - evidence_weight)[..., None] * prior).log_softmax(-1)
         return {
