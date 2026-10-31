@@ -3,8 +3,9 @@
     uv run scripts/evaluate_shiftaware.py --run-dir models/shiftaware/meld_seed42
 
 Writes
-    predictions/<variant>_<dataset>_<split>_seed<k>.csv   shared prediction format (+ shift_prob)
-    reports/<variant>/<dataset>/seed<k>/summary.json      dev check, test metrics, CIs, vs B1
+    predictions/<variant>_<dataset>_<split>_seed<k>.csv   shared prediction format, plus
+                                        shift_prob, forecast_pred, forecast_shift_prob
+    reports/<variant>/<dataset>/seed<k>/summary.json      dev check, test metrics, CIs, vs B1, forecast
     reports/<variant>/<dataset>/seed<k>/stratified_<split>.csv, per_class_<split>.csv,
                                         confusion_<split>.csv
 
@@ -66,7 +67,8 @@ CI_KEYS = ["weighted_f1", "macro_f1", "micro_f1_no_neutral", "weighted_f1_no_neu
 def predict(
     model, tokenizer, frame, *, labels, max_length, batch_size, device, dtype
 ) -> pd.DataFrame:
-    """Return the labelled rows of `frame` with pred, shift_prob and shift_eligible columns.
+    """Return the labelled rows of `frame` with pred, shift_prob, shift_eligible and the
+    history-only forecast: forecast_pred, forecast_shift_prob, forecast_p_<label>.
 
     Unlabelled turns (EmoWOZ system turns) are read as context but not returned.
     """
@@ -86,6 +88,8 @@ def predict(
             )
         predicted = output.emotion_probs.argmax(-1).cpu()
         shift_probs = output.shift_probs.float().cpu()
+        forecast_probs = output.forecast_emotion_probs.float().cpu()
+        forecast_shift_probs = output.forecast_shift_probs.float().cpu()
         eligible = (batch["shift_mask"] & output.shift_mask).cpu()
         for i, turns in enumerate(cpu_batch["metadata"]):
             for t, meta in enumerate(turns):
@@ -95,6 +99,12 @@ def predict(
                         "pred": labels[int(predicted[i, t])],
                         "shift_prob": float(shift_probs[i, t]),
                         "shift_eligible": bool(eligible[i, t]),
+                        "forecast_pred": labels[int(forecast_probs[i, t].argmax())],
+                        "forecast_shift_prob": float(forecast_shift_probs[i, t]),
+                        **{
+                            f"forecast_p_{label}": float(forecast_probs[i, t, k])
+                            for k, label in enumerate(labels)
+                        },
                     }
                 )
     merged = frame.merge(pd.DataFrame(rows), on=KEYS, how="left", validate="one_to_one")
@@ -156,6 +166,8 @@ def main():
     model, tokenizer = load_trained_model(args.run_dir, device=device)
     headline = M.HEADLINE[dataset]
     labels = emotions(dataset)
+    # Label history for the forecast's transition baseline; no model pass needed.
+    train = load(dataset, splits="train", root=args.data_root)
 
     out = ROOT / "reports" / args.variant / dataset / f"seed{seed}"
     out.mkdir(parents=True, exist_ok=True)
@@ -201,7 +213,7 @@ def main():
             print(f"[dev] {headline} {overall[headline]:.4f} (training run: {training_dev:.4f})")
             continue
 
-        df[[*PRED_COLS, "shift_prob"]].to_csv(
+        df[[*PRED_COLS, "shift_prob", "forecast_pred", "forecast_shift_prob"]].to_csv(
             ROOT / "predictions" / f"{args.variant}_{dataset}_{split}_seed{seed}.csv", index=False
         )
         result: dict[str, Any] = {key: float(overall[key]) for key in METRIC_KEYS}
@@ -211,6 +223,7 @@ def main():
         result["n"] = len(df)
         result["shift_head"] = shift_head(df)
         result["derived_shift_detection"] = M.derived_shift_detection(df)
+        result["forecast"] = M.forecast_scores(df, train, labels)
         result["vs_b1_seed0"] = versus_b1(df, dataset, split, headline, args.bootstrap)
         summary["test"][split] = result
 
@@ -223,6 +236,12 @@ def main():
         M.confusion(df["emotion"], df["pred"], labels).to_csv(out / f"confusion_{split}.csv")
         low, high = result["ci95"][headline]
         print(f"[{split}] {headline} {result[headline]:.4f} [{low:.4f}, {high:.4f}]")
+        auroc = result["forecast"]["shift_auroc"]
+        print(
+            f"[{split}] forecast shift AUROC {auroc['forecast']:.4f} "
+            f"(transition from predicted {auroc['transition_pred']:.4f}, "
+            f"from gold {auroc['transition_gold']:.4f})"
+        )
 
     (out / "summary.json").write_text(json.dumps(summary, indent=1, default=float))
     print(f"Wrote {out.relative_to(ROOT)}/summary.json")

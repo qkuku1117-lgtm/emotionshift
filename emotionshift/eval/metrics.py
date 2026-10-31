@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
 
 from ..data.labels import EMOTIONS
 from ..data.shifts import SHIFT_TYPES, STRATA
@@ -129,6 +129,68 @@ def derived_shift_detection(df: pd.DataFrame, pred_col: str = "pred") -> dict:
         "shift_f1": f1_score(gold, pred, zero_division=0),
         "predicted_shift_rate": float(pred.mean()),
     }
+
+
+def _auroc(gold, score) -> float | None:
+    gold = np.asarray(gold)
+    return float(roc_auc_score(gold, score)) if len(np.unique(gold)) == 2 else None
+
+
+def forecast_scores(df: pd.DataFrame, train: pd.DataFrame, labels=EMOTIONS) -> dict:
+    """Task T3: the speaker's next emotion, and whether it shifts, predicted
+    *before* their utterance is read. Scored on turns with a previous
+    same-speaker labelled turn.
+
+    ``df`` needs emotion, prev_emotion, stratum, pred (the model's recognition),
+    forecast_pred, forecast_shift_prob and forecast_p_<label> per label.
+    Baselines from label history alone:
+
+    * persistence: repeat the previous turn's emotion, as recognized by the
+      model (``_pred``, causal) or gold (``_gold``, an oracle);
+    * transition: P(emotion | previous emotion) and P(shift | previous
+      emotion), estimated on ``train`` and read with the previous predicted
+      or gold emotion.
+    """
+    d = df.sort_values(["split", "dialogue_id", "turn"]).copy()
+    d["prev_pred"] = d.groupby(["split", "dialogue_id", "speaker"], sort=False)["pred"].shift(1)
+    d = d[d["stratum"].isin(("stable", "shift"))]
+    t = train[train["stratum"].isin(("stable", "shift"))]
+    counts = pd.crosstab(t["prev_emotion"], t["emotion"]).reindex(
+        index=labels, columns=labels, fill_value=0
+    )
+    marginal = t["emotion"].value_counts(normalize=True).reindex(labels, fill_value=0)
+    # One pseudo-count spread by the marginal: unseen previous emotions fall back to it.
+    transition = counts.add(marginal, axis=1)
+    transition = transition.div(transition.sum(axis=1), axis=0)
+    stay = pd.Series(np.diag(transition), index=labels)
+
+    shift = (d["stratum"] == "shift").astype(int)
+    result: dict = {
+        "n": len(d),
+        "base_rate": float(shift.mean()),
+        "shift_auroc": {
+            "forecast": _auroc(shift, d["forecast_shift_prob"]),
+            "transition_pred": _auroc(shift, 1 - d["prev_pred"].map(stay)),
+            "transition_gold": _auroc(shift, 1 - d["prev_emotion"].map(stay)),
+        },
+        "emotion": {
+            "forecast": scores(d["emotion"], d["forecast_pred"], labels),
+            "persistence_pred": scores(d["emotion"], d["prev_pred"], labels),
+            "persistence_gold": scores(d["emotion"], d["prev_emotion"], labels),
+        },
+        "class_auroc": {},
+    }
+    for label in labels:
+        if label == "neutral":
+            continue
+        gold = (d["emotion"] == label).astype(int)
+        result["class_auroc"][label] = {
+            "n": int(gold.sum()),
+            "forecast": _auroc(gold, d[f"forecast_p_{label}"]),
+            "transition_pred": _auroc(gold, d["prev_pred"].map(transition[label])),
+            "transition_gold": _auroc(gold, d["prev_emotion"].map(transition[label])),
+        }
+    return result
 
 
 def bootstrap_ci(
