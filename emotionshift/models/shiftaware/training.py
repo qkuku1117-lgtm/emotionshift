@@ -18,6 +18,7 @@ from emotionshift.data.labels import EMOTIONS
 from .loss import ShiftAwareLoss
 
 CLASS_WEIGHTING = ("none", "sqrt_inverse", "inverse")
+SELECTION = ("headline", "headline_macro")
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,7 @@ class TrainingConfig:
     shift_weight: float = 1.0
     forecast_weight: float = 0.5
     component_weight: float = 0.0
+    selection: str = "headline_macro"
 
     def __post_init__(self):
         for name in (
@@ -84,6 +86,21 @@ class TrainingConfig:
             raise ValueError("freeze_encoder must be boolean")
         if self.class_weighting not in CLASS_WEIGHTING:
             raise ValueError(f"class_weighting must be one of {CLASS_WEIGHTING}")
+        if self.selection not in SELECTION:
+            raise ValueError(f"selection must be one of {SELECTION}")
+
+
+def selection_score(metrics: dict, headline: str, mode: str) -> float:
+    """Dev score for picking the best epoch and early stopping.
+
+    headline_macro averages the dataset's headline metric with macro F1, so an
+    early epoch that ignores the rare emotions cannot win on frequent classes alone.
+    """
+    if mode not in SELECTION:
+        raise ValueError(f"selection must be one of {SELECTION}")
+    if mode == "headline":
+        return float(metrics[headline])
+    return (float(metrics[headline]) + float(metrics["macro_f1"])) / 2
 
 
 def emotion_class_weights(emotions: pd.Series, mode: str) -> torch.Tensor | None:

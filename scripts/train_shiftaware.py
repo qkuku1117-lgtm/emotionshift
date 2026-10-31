@@ -39,6 +39,7 @@ from emotionshift.models.shiftaware.training import (
     make_optimizer,
     make_scheduler,
     move_batch,
+    selection_score,
     train_epoch,
 )
 
@@ -253,6 +254,7 @@ def main():
         "updates_per_epoch": steps_per_epoch,
         "total_updates": steps_per_epoch * settings.epochs,
         "objective": objective,
+        "selection": settings.selection,
         "class_weights": (
             dict(zip(EMOTIONS, class_weights.tolist(), strict=True))
             if class_weights is not None
@@ -287,7 +289,7 @@ def main():
             log=lambda row, epoch=epoch: log_line({"epoch": epoch, **row}),
         )
         dev_result = evaluate(model, dev_loader, criterion, device, dtype=dtype)
-        score = dev_result[objective]
+        score = selection_score(dev_result, objective, settings.selection)
         improved = score > best_score + settings.min_delta
         if improved:
             best_score, best_epoch, stale_epochs = score, epoch, 0
@@ -313,6 +315,7 @@ def main():
                 group["group_name"]: group["lr"] for group in optimizer.param_groups
             },
             "best_epoch": best_epoch,
+            "selection_score": score,
             "seconds": round(time.perf_counter() - epoch_start, 1),
             "peak_gpu_gb": (
                 round(torch.cuda.max_memory_allocated(device) / 2**30, 2)
@@ -326,7 +329,11 @@ def main():
         if settings.patience and stale_epochs >= settings.patience:
             break
     minutes = (time.perf_counter() - run_start) / 60
-    print(f"Best dev {objective}: {best_score:.4f} at epoch {best_epoch} ({minutes:.1f} min)")
+    best = history[best_epoch - 1]["dev"]
+    print(
+        f"Best dev {objective}: {best[objective]:.4f} (macro_f1 {best['macro_f1']:.4f}, "
+        f"{settings.selection} {best_score:.4f}) at epoch {best_epoch} ({minutes:.1f} min)"
+    )
 
 
 if __name__ == "__main__":

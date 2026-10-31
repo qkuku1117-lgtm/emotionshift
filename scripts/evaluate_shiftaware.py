@@ -152,7 +152,12 @@ def main():
         "git": run.get("git"),
         "seed": seed,
         "best_epoch": checkpoint["epoch"],
-        "selected_on_dev": headline,
+        # Runs from before the selection option picked epochs on the headline alone.
+        "selected_on_dev": (
+            headline
+            if checkpoint["training"].get("selection", "headline") == "headline"
+            else f"mean({headline}, macro_f1)"
+        ),
         "dev": {},
         "test": {},
     }

@@ -13,6 +13,7 @@ from emotionshift.models.shiftaware.training import (
     emotion_class_weights,
     make_optimizer,
     make_scheduler,
+    selection_score,
     train_epoch,
 )
 
@@ -101,3 +102,21 @@ def test_class_weights_upweight_rare_emotions():
         emotion_class_weights(pd.Series(["neutral", "joy"]), "inverse")
     with pytest.raises(ValueError, match="class_weighting"):
         TrainingConfig(class_weighting="balanced")
+
+
+def test_selection_prefers_epochs_that_also_learn_rare_emotions():
+    early = {"micro_f1_no_neutral": 0.601, "macro_f1": 0.367}
+    later = {"micro_f1_no_neutral": 0.591, "macro_f1": 0.437}
+    headline = "micro_f1_no_neutral"
+    assert selection_score(early, headline, "headline") > selection_score(
+        later, headline, "headline"
+    )
+    assert selection_score(later, headline, "headline_macro") == pytest.approx(0.514)
+    assert selection_score(later, headline, "headline_macro") > selection_score(
+        early, headline, "headline_macro"
+    )
+    assert TrainingConfig().selection == "headline_macro"
+    with pytest.raises(ValueError, match="selection"):
+        TrainingConfig(selection="macro")
+    with pytest.raises(ValueError, match="selection"):
+        selection_score(early, headline, "macro")
