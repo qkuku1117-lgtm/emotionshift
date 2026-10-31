@@ -59,6 +59,82 @@
     "shift_f1": 0.7777777777777778,
     "predicted_shift_rate": 0.3435094239447836
    },
+   "forecast": {
+    "n": 7534,
+    "base_rate": 0.3517387841783913,
+    "shift_auroc": {
+     "forecast": 0.7957665384080478,
+     "transition_pred": 0.5827428028371424,
+     "transition_gold": 0.6079091913525875
+    },
+    "emotion": {
+     "forecast": {
+      "n": 7534,
+      "weighted_f1": 0.7469543096775535,
+      "macro_f1": 0.29410097138261176,
+      "micro_f1_no_neutral": 0.5863779882724403,
+      "weighted_f1_no_neutral": 0.570254778204376,
+      "macro_f1_no_neutral": 0.2032519608140376,
+      "accuracy": 0.7647995752588267
+     },
+     "persistence_pred": {
+      "n": 7534,
+      "weighted_f1": 0.6116424595190009,
+      "macro_f1": 0.24182897585265928,
+      "micro_f1_no_neutral": 0.3244540436765059,
+      "weighted_f1_no_neutral": 0.3170333549179484,
+      "macro_f1_no_neutral": 0.1545614111914636,
+      "accuracy": 0.6434828776214494
+     },
+     "persistence_gold": {
+      "n": 7534,
+      "weighted_f1": 0.6195265617774268,
+      "macro_f1": 0.2577017734401542,
+      "micro_f1_no_neutral": 0.332461355529132,
+      "weighted_f1_no_neutral": 0.3303062923491895,
+      "macro_f1_no_neutral": 0.1722345048047312,
+      "accuracy": 0.6482612158216087
+     }
+    },
+    "class_auroc": {
+     "fearful": {
+      "n": 16,
+      "forecast": 0.7813414471934026,
+      "transition_pred": 0.40713953179036977,
+      "transition_gold": 0.4143680167597766
+     },
+     "dissatisfied": {
+      "n": 604,
+      "forecast": 0.9300588668138338,
+      "transition_pred": 0.7569654683065279,
+      "transition_gold": 0.7398249285666505
+     },
+     "apologetic": {
+      "n": 73,
+      "forecast": 0.7494735180013697,
+      "transition_pred": 0.5374339258206602,
+      "transition_gold": 0.5451067009637328
+     },
+     "abusive": {
+      "n": 17,
+      "forecast": 0.7891211293616821,
+      "transition_pred": 0.7666935338722425,
+      "transition_gold": 0.8347940746073607
+     },
+     "excited": {
+      "n": 57,
+      "forecast": 0.6197766718521595,
+      "transition_pred": 0.5301333445959421,
+      "transition_gold": 0.5566286318980546
+     },
+     "satisfied": {
+      "n": 1817,
+      "forecast": 0.8830757921632796,
+      "transition_pred": 0.5877049004364643,
+      "transition_gold": 0.5991080970166028
+     }
+    }
+   },
    "vs_b1_seed0": null
   }
  }
