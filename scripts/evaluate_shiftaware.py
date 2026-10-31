@@ -25,13 +25,14 @@ import torch
 from sklearn.metrics import f1_score, roc_auc_score
 from torch.utils.data import DataLoader
 
-from emotionshift.data import DATA_ROOT, EMOTIONS, load
+from emotionshift.data import DATA_ROOT, load
+from emotionshift.data.labels import emotions
 from emotionshift.data.torch_data import DialogueCollator, DialogueDataset
 from emotionshift.eval import metrics as M
 from emotionshift.models.shiftaware.training import autocast_dtype, load_trained_model, move_batch
 
 ROOT = Path(__file__).resolve().parents[1]
-TEST_SPLITS = {"meld": ["test"], "dailydialog": ["test_dedup", "test"]}  # as in b1_tfidf.yaml
+TEST_SPLITS = {"meld": ["test"], "dailydialog": ["test_dedup", "test"], "emowoz": ["test"]}
 PRED_COLS = [
     "dataset",
     "split",
@@ -50,12 +51,25 @@ PRED_COLS = [
     "seed",
 ]
 KEYS = ["dataset", "split", "dialogue_id", "turn"]
-METRIC_KEYS = ["weighted_f1", "macro_f1", "micro_f1_no_neutral", "accuracy"]
+METRIC_KEYS = [
+    "weighted_f1",
+    "macro_f1",
+    "micro_f1_no_neutral",
+    "weighted_f1_no_neutral",
+    "macro_f1_no_neutral",
+    "accuracy",
+]
+CI_KEYS = ["weighted_f1", "macro_f1", "micro_f1_no_neutral", "weighted_f1_no_neutral"]
 
 
 @torch.inference_mode()
-def predict(model, tokenizer, frame, *, max_length, batch_size, device, dtype) -> pd.DataFrame:
-    """Return `frame` with pred, shift_prob and shift_eligible columns."""
+def predict(
+    model, tokenizer, frame, *, labels, max_length, batch_size, device, dtype
+) -> pd.DataFrame:
+    """Return the labelled rows of `frame` with pred, shift_prob and shift_eligible columns.
+
+    Unlabelled turns (EmoWOZ system turns) are read as context but not returned.
+    """
     loader = DataLoader(
         DialogueDataset(frame),
         batch_size=batch_size,
@@ -78,7 +92,7 @@ def predict(model, tokenizer, frame, *, max_length, batch_size, device, dtype) -
                 rows.append(
                     {
                         **{key: meta[key] for key in KEYS},
-                        "pred": EMOTIONS[int(predicted[i, t])],
+                        "pred": labels[int(predicted[i, t])],
                         "shift_prob": float(shift_probs[i, t]),
                         "shift_eligible": bool(eligible[i, t]),
                     }
@@ -86,7 +100,7 @@ def predict(model, tokenizer, frame, *, max_length, batch_size, device, dtype) -
     merged = frame.merge(pd.DataFrame(rows), on=KEYS, how="left", validate="one_to_one")
     if merged["pred"].isna().any():
         raise RuntimeError("Some utterances received no prediction")
-    return merged
+    return merged[merged["emotion"].notna()].reset_index(drop=True)
 
 
 def shift_head(df: pd.DataFrame) -> dict[str, float | int]:
@@ -141,6 +155,7 @@ def main():
     dtype = autocast_dtype(device, checkpoint["training"]["amp"])
     model, tokenizer = load_trained_model(args.run_dir, device=device)
     headline = M.HEADLINE[dataset]
+    labels = emotions(dataset)
 
     out = ROOT / "reports" / args.variant / dataset / f"seed{seed}"
     out.mkdir(parents=True, exist_ok=True)
@@ -168,13 +183,14 @@ def main():
             model,
             tokenizer,
             frame,
+            labels=labels,
             max_length=checkpoint["training"]["max_length"],
             batch_size=args.batch_size,
             device=device,
             dtype=dtype,
         )
         df["model"], df["seed"] = args.variant, seed
-        overall = M.scores(df["emotion"], df["pred"])
+        overall = M.scores(df["emotion"], df["pred"], labels)
         if split == "dev":
             training_dev = checkpoint["dev_metrics"][headline]
             summary["dev"] = {
@@ -190,7 +206,7 @@ def main():
         )
         result: dict[str, Any] = {key: float(overall[key]) for key in METRIC_KEYS}
         result["ci95"] = {
-            key: M.bootstrap_ci(df, key, n_boot=args.bootstrap) for key in METRIC_KEYS[:3]
+            key: M.bootstrap_ci(df, key, n_boot=args.bootstrap, labels=labels) for key in CI_KEYS
         }
         result["n"] = len(df)
         result["shift_head"] = shift_head(df)
@@ -198,11 +214,13 @@ def main():
         result["vs_b1_seed0"] = versus_b1(df, dataset, split, headline, args.bootstrap)
         summary["test"][split] = result
 
-        M.stratified(df).round(4).to_csv(out / f"stratified_{split}.csv", index=False)
-        M.per_class_f1(df["emotion"], df["pred"]).round(4).to_csv(
+        M.stratified(df, labels=labels).round(4).to_csv(
+            out / f"stratified_{split}.csv", index=False
+        )
+        M.per_class_f1(df["emotion"], df["pred"], labels).round(4).to_csv(
             out / f"per_class_{split}.csv", index=False
         )
-        M.confusion(df["emotion"], df["pred"]).to_csv(out / f"confusion_{split}.csv")
+        M.confusion(df["emotion"], df["pred"], labels).to_csv(out / f"confusion_{split}.csv")
         low, high = result["ci95"][headline]
         print(f"[{split}] {headline} {result[headline]:.4f} [{low:.4f}, {high:.4f}]")
 

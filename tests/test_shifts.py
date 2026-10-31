@@ -48,6 +48,9 @@ def test_speakers_in_different_dialogues_do_not_share_history():
         ("anger", "sadness", "within_negative"),
         ("surprise", "joy", "surprise"),
         ("anger", "surprise", "surprise"),
+        ("dissatisfied", "apologetic", "within_negative"),
+        ("satisfied", "dissatisfied", "valence_flip"),
+        ("excited", "satisfied", "within_positive"),
     ],
 )
 def test_shift_type(prev, curr, expected):
@@ -65,3 +68,20 @@ def test_shift_type(prev, curr, expected):
 )
 def test_clean_text(raw, expected):
     assert clean_text(raw) == expected
+
+
+def test_unlabelled_turns_are_skipped_but_counted_in_gaps():
+    frame = pd.DataFrame(
+        {
+            "dialogue_id": "d0",
+            "turn": range(5),
+            "speaker": ["user", "system", "user", "system", "user"],
+            "text": ["x"] * 5,
+            "emotion": ["neutral", None, "neutral", None, "satisfied"],
+        }
+    )
+    out = add_shift_columns(frame).set_index("turn")
+    assert out.loc[[1, 3], "stratum"].isna().all()
+    assert out.loc[[0, 2, 4], "stratum"].tolist() == ["first", "stable", "shift"]
+    assert out.loc[4, "shift_type"] == "onset"  # previous labelled turn is neutral
+    assert out.loc[[2, 3, 4], "turn_gap"].tolist() == [2, 2, 2]

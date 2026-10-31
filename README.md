@@ -26,7 +26,7 @@ labels, metrics, efficiency helpers, prediction format, tests.
 
 ```bash
 uv sync                          # Python 3.12, dependencies and notebook tools
-bash scripts/fetch_data.sh       # downloads MELD, MELD-FR and DailyDialog JSON into data/raw/
+bash scripts/fetch_data.sh       # downloads MELD, MELD-FR, DailyDialog JSON and EmoWOZ into data/raw/
                                  # (scripts/fetch_data.py does the same, cross-platform)
 uv run pytest                    # data rules, pilot numbers, metrics, original APIs and model interfaces
                                  # B2 checks need the rnn extra (uv sync --extra rnn),
@@ -36,7 +36,7 @@ uv run pytest                    # data rules, pilot numbers, metrics, original 
 ```python
 from emotionshift.data.loaders import load
 
-df = load("meld")  # or "dailydialog"; one row per utterance
+df = load("meld")  # or "dailydialog" or "emowoz"; one row per utterance
 # Official train/dev/test by default; request DailyDialog test_dedup explicitly.
 dd = load("dailydialog", splits=("train", "dev", "test_dedup"))
 ```
@@ -60,11 +60,12 @@ All in `emotionshift/data/`, checked by `tests/test_data.py`.
 | Splits | MELD official 9,989 / 1,109 / 2,610 utterances. DailyDialog official 11,118 / 1,000 / 1,000 dialogues | test |
 | Labels | 7 shared labels, fixed order `neutral, joy, surprise, anger, sadness, disgust, fear`. DailyDialog `happiness`→`joy`, `no_emotion`→`neutral` | test |
 | DailyDialog speakers | Two-party; speakers alternate A, B, A, … | — |
+| EmoWOZ | Official split 9,233 / 1,100 / 1,100 dialogues (66,474 / 8,509 / 8,634 labelled user turns). Own 7 labels `neutral, fearful, dissatisfied, apologetic, abusive, excited, satisfied` (`labels.emotions("emowoz")`), not mapped to the shared set. Speakers `user`, `system`; system turns are kept as context with no `emotion` and no `stratum`, and are never scored | test |
 | DailyDialog de-dup | `test_dedup` = test minus dialogues that appear **verbatim** in train (105 of 996 unique) and minus repeats inside test → 891 dialogues, 7,019 utterances. **Headline DailyDialog numbers use `test_dedup`**; official `test` is reported for comparison | test |
 | Shift | Emotion differs from the **same speaker's** previous utterance in the dialogue; a speaker's first turn is `first` (neither shift nor stable). MELD shifts 4,001 / 427 / 1,003 = MELD-FR flips ±1 | test |
-| Shift types | Priority: onset (neutral→x), offset (x→neutral), surprise (surprise↔non-neutral), within-negative, valence flip. MELD test: 355 / 340 / 158 / 81 / 69 | test |
+| Shift types | Priority: onset (neutral→x), offset (x→neutral), surprise (surprise↔non-neutral), within-negative, valence flip, within-positive (EmoWOZ only). MELD test: 355 / 340 / 158 / 81 / 69 | test |
 | Tuning | Hyper-parameters chosen on **dev** only; test scored once per seed | — |
-| Metrics | MELD headline weighted-F1; DailyDialog headline micro-F1 excluding neutral; always also macro-F1, per-class F1, stratified scores, 95% CI | test vs sklearn |
+| Metrics | MELD headline weighted-F1; DailyDialog headline micro-F1 excluding neutral; EmoWOZ headline weighted-F1 excluding neutral (macro-F1 excluding neutral alongside); always also macro-F1, per-class F1, stratified scores, 95% CI | test vs sklearn |
 | CIs | Bootstrap over **dialogues** (1,000 resamples), since utterances in one dialogue are not independent | — |
 | No gold at inference | History features use predicted emotions; gold-history results are labelled "oracle" | — |
 
@@ -135,7 +136,8 @@ deliverables/            temporary collection folders for the video (removed bef
 ## Data sources
 
 MELD (Poria et al., 2019) from github.com/declare-lab/MELD; DailyDialog (Li et al.,
-2017) official split via github.com/declare-lab/conv-emotion. Both are for
+2017) official split via github.com/declare-lab/conv-emotion; EmoWOZ (Feng et al.,
+2022) from zenodo.org/record/6506504 (CC BY-NC 4.0). All are for
 non-commercial research use; the raw data is downloaded by `scripts/fetch_data.sh`
 and never committed.
 
@@ -145,8 +147,8 @@ All imports now share the same shift labels (`surprise`) and seven-class macro-F
 All notebooks and models use the unified loader in `emotionshift/data/loaders.py`;
 `datasets.py` retains compatibility imports only. `load(dataset, splits=None,
 root=DATA_ROOT)` defaults to official train/dev/test and reads only the requested
-splits. To use another data directory, pass `root` containing `meld/` and
-`dailydialog/`. No data is downloaded during loading.
+splits. To use another data directory, pass `root` containing `meld/`,
+`dailydialog/` and `emowoz/`. No data is downloaded during loading.
 
 Every utterance has `dataset`, `split`, `dialogue_id`, `source_split`,
 `source_dialogue_id`, `turn`, `speaker`, `raw_text`, `text`, `emotion`,

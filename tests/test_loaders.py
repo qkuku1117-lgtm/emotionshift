@@ -104,3 +104,65 @@ def test_unknown_labels_are_not_silently_mapped(tmp_path):
     write_dd(tmp_path, "test", [[("Okay", "typo")]])
     with pytest.raises(ValueError, match="Unknown emotion"):
         load("dailydialog", "test", root=tmp_path)
+
+
+def write_emowoz(root, split_ids, dialogues):
+    """dialogues: id -> [(text, label)], label -1 for system turns."""
+    folder = root / "emowoz"
+    folder.mkdir(exist_ok=True)
+    logs = {
+        dialogue_id: {
+            "log": [
+                {
+                    "text": text,
+                    "emotion": []
+                    if label == -1
+                    else [{"annotation": label}] * 3 + [{"emotion": label, "sentiment": 0}],
+                }
+                for text, label in turns
+            ]
+        }
+        for dialogue_id, turns in dialogues.items()
+    }
+    sources = {"multiwoz": {}, "dialmage": {}}
+    for dialogue_id, log in logs.items():
+        sources["dialmage" if dialogue_id.startswith("DMAGE") else "multiwoz"][dialogue_id] = log
+    for source, content in sources.items():
+        (folder / f"emowoz-{source}.json").write_text(json.dumps(content))
+    (folder / "data-split.json").write_text(json.dumps(split_ids))
+
+
+def test_emowoz_keeps_system_turns_as_unlabelled_context(tmp_path):
+    write_emowoz(
+        tmp_path,
+        {
+            "train": {"multiwoz": ["MUL1.json", "MUL1.json"], "dialmage": ["DMAGE2.json"]},
+            "dev": {"multiwoz": [], "dialmage": []},
+            "test": {"multiwoz": [], "dialmage": []},
+        },
+        {
+            "MUL1.json": [("Find a hotel.", 0), ("Which area?", -1), ("Great, thanks!", 6)],
+            "DMAGE2.json": [("Book it.", 0), ("", -1), ("Hello??", 2), ("Sorry.", -1)],
+        },
+    )
+    frame = load("emowoz", "train", root=tmp_path)
+    # The repeated train ID is loaded once; the ".json" suffix is dropped.
+    assert sorted(frame.dialogue_id.unique()) == ["emowoz-train-DMAGE2", "emowoz-train-MUL1"]
+    user = frame[frame.speaker == "user"]
+    system = frame[frame.speaker == "system"]
+    assert user.turn.tolist() == [0, 2, 0, 2]
+    assert user.emotion.tolist() == ["neutral", "dissatisfied", "neutral", "satisfied"]
+    assert system.emotion.isna().all() and system.stratum.isna().all()
+    assert user.stratum.tolist() == ["first", "shift", "first", "shift"]
+    assert user.prev_emotion.tolist()[1] == "neutral"
+    assert set(user.turn_gap.dropna()) == {2}
+
+
+def test_emowoz_rejects_unknown_labels(tmp_path):
+    write_emowoz(
+        tmp_path,
+        {"train": {"multiwoz": ["MUL1.json"], "dialmage": []}},
+        {"MUL1.json": [("Hi", 7)]},
+    )
+    with pytest.raises(ValueError, match="Unknown EmoWOZ label"):
+        load("emowoz", "train", root=tmp_path)

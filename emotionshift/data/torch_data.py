@@ -6,6 +6,8 @@ must support the Hugging Face batch-call interface; no model is downloaded.
 
 Samples contain targets separately from tokenized inputs. Gold history and
 evaluation strata never enter the tokenizer. Pass exactly one split per dataset.
+Class ids follow the dataset's own label space (``labels.emotions``). Unlabelled
+turns (EmoWOZ system turns) stay as context with label -100 and no shift target.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from .labels import LABEL2ID
+from .labels import LABEL_SPACES
 from .shifts import add_shift_labels
 
 IGNORE_INDEX = -100
@@ -106,15 +108,22 @@ def _prepare_dialogues(frame: pd.DataFrame) -> tuple[tuple[_Turn, ...], ...]:
         raise ValueError(
             "Pass a nonempty table with exactly one split, e.g. load(..., splits='train')"
         )
-    if frame[list(required)].isna().any().any():
+    if frame[list(required - {"emotion"})].isna().any().any():
         raise ValueError("Utterance columns must not contain missing values")
     if not pd.api.types.is_integer_dtype(frame["turn"]) or (frame["turn"] < 0).any():
         raise ValueError("turn must contain nonnegative integers")
     for column in ("text", "speaker"):
         if not frame[column].map(lambda value: isinstance(value, str)).all():
             raise ValueError(f"{column} must contain strings")
-    if not frame["emotion"].isin(LABEL2ID).all():
-        raise ValueError("Emotion labels must use the shared seven-class label space")
+    if not frame["dataset"].isin(LABEL_SPACES).all():
+        raise ValueError(f"dataset must be one of {sorted(LABEL_SPACES)}")
+    label_ids = {d: {e: i for i, e in enumerate(LABEL_SPACES[d])} for d in LABEL_SPACES}
+    unlabelled = frame["emotion"].isna()
+    if (unlabelled & frame["dataset"].ne("emowoz")).any():
+        raise ValueError("Only EmoWOZ system turns may be unlabelled")
+    known = [e in label_ids[d] for d, e in zip(frame["dataset"], frame["emotion"], strict=True)]
+    if not (unlabelled | pd.Series(known, index=frame.index)).all():
+        raise ValueError("Emotion labels must use the dataset's label space")
     keys = ["dataset", "split", "dialogue_id"]
     if frame.duplicated([*keys, "turn"]).any():
         raise ValueError("Duplicate utterance keys")
@@ -134,9 +143,11 @@ def _prepare_dialogues(frame: pd.DataFrame) -> tuple[tuple[_Turn, ...], ...]:
                     text=row["text"],
                     speaker=row["speaker"],
                     speaker_id=speaker_id,
-                    label=LABEL2ID[row["emotion"]],
+                    label=IGNORE_INDEX
+                    if pd.isna(row["emotion"])
+                    else label_ids[row["dataset"]][row["emotion"]],
                     shift_label=float(row["stratum"] == "shift"),
-                    shift_mask=row["stratum"] != "first",
+                    shift_mask=row["stratum"] in ("stable", "shift"),
                     turn_gap=0 if pd.isna(row["turn_gap"]) else int(row["turn_gap"]),
                     metadata={c: row[c] for c in metadata_columns},
                 )

@@ -220,3 +220,26 @@ def test_shared_training_data_reaches_pytorch_batches(dataset):
     assert batch["labels"].shape == (8,)
     assert batch["tokens"]["input_ids"].shape[0] == 8
     assert all(m["dataset"] == dataset and m["split"] == "train" for m in batch["metadata"])
+
+
+def test_unlabelled_turns_are_context_without_targets():
+    frame = pd.DataFrame(
+        {
+            "dataset": "emowoz",
+            "split": "train",
+            "dialogue_id": "d0",
+            "turn": range(4),
+            "speaker": ["user", "system", "user", "system"],
+            "text": ["hi", "", "thanks", "bye"],
+            "emotion": ["neutral", None, "satisfied", None],
+        }
+    )
+    sample = DialogueDataset(frame)[0]
+    assert sample["texts"] == ["hi", "", "thanks", "bye"]
+    assert sample["labels"] == [0, IGNORE_INDEX, 6, IGNORE_INDEX]
+    assert sample["shift_mask"] == [False, False, True, False]
+    assert sample["shift_labels"] == [0.0, 0.0, 1.0, 0.0]
+    with pytest.raises(ValueError, match="Only EmoWOZ"):
+        DialogueDataset(frame.assign(dataset="meld"))
+    with pytest.raises(ValueError, match="label space"):
+        DialogueDataset(frame.assign(emotion=["neutral", None, "joy", None]))

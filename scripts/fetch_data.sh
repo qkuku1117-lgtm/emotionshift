@@ -3,7 +3,7 @@
 set -euo pipefail
 
 DATA="$(cd "$(dirname "$0")/.." && pwd)/data/raw"
-mkdir -p "$DATA/meld" "$DATA/dailydialog"
+mkdir -p "$DATA/meld" "$DATA/dailydialog" "$DATA/emowoz"
 
 MELD=https://raw.githubusercontent.com/declare-lab/MELD/master/data/MELD
 for split in train dev test; do
@@ -31,5 +31,11 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
             archive.read(f"dailydialog/{split}.json")
         )
 EOF
+
+# EmoWOZ 1.0 (Feng et al., 2022): MultiWOZ and DialMAGE dialogues plus the official split.
+EMOWOZ=https://zenodo.org/record/6506504/files
+for file in emowoz-multiwoz.json emowoz-dialmage.json data-split.json; do
+  curl -sfL -o "$DATA/emowoz/$file" "$EMOWOZ/$file"
+done
 
 echo "Data written to $DATA"

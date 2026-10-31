@@ -1,4 +1,4 @@
-"""One utterance table for MELD and the conv-emotion DailyDialog JSON release.
+"""One utterance table for MELD, the conv-emotion DailyDialog JSON release and EmoWOZ.
 
 ``load(dataset, splits=..., root=...)`` reads only requested official splits.
 DailyDialog's ``test_dedup`` is an explicit view: exclude verbatim train overlap
@@ -9,6 +9,10 @@ Every row retains raw_text, source_split and source_dialogue_id alongside a
 unique dialogue_id scoped to dataset and output split. Gold shift annotations
 are evaluation metadata; models must not use them as inference features.
 MELD-FR has its own instance/trigger schema via load_meld_fr.
+
+EmoWOZ uses its own label space (``labels.emotions("emowoz")``). Its system
+turns stay in the table as context with a missing ``emotion`` and no stratum;
+drop them before scoring.
 """
 
 from __future__ import annotations
@@ -20,12 +24,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from .labels import DAILYDIALOG_MAP, MELD_MAP, SPLITS
+from .labels import DAILYDIALOG_MAP, DATASETS, EMOWOZ_MAP, MELD_MAP, SPLITS
 from .shifts import add_shift_labels
 
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data" / "raw"
 _MELD_FR_FILES = {"train": "train", "dev": "val", "test": "test"}
 _DD_FILES = {"train": "train", "dev": "valid", "test": "test"}
+_EMOWOZ_SOURCES = ("multiwoz", "dialmage")
 _COLUMNS = [
     "dataset",
     "split",
@@ -88,6 +93,35 @@ def _read_dd(raw, split):
         return [json.loads(line)["dialogue"] for line in stream if line.strip()]
 
 
+def _read_emowoz(raw, selected):
+    """Rows per split from the Zenodo release: user turns are even, system turns odd.
+
+    The label is the final (aggregated) annotation; -1 marks system turns.
+    """
+    dialogues = {}
+    for source in _EMOWOZ_SOURCES:
+        dialogues.update(json.loads((raw / f"emowoz-{source}.json").read_text(encoding="utf-8")))
+    split_ids = json.loads((raw / "data-split.json").read_text(encoding="utf-8"))
+    rows = {}
+    for split in selected:
+        # The train list repeats one dialogue ID; keep its first occurrence.
+        ids = dict.fromkeys(i for source in _EMOWOZ_SOURCES for i in split_ids[split][source])
+        rows[split] = []
+        for dialogue_id in ids:
+            for turn, utterance in enumerate(dialogues[dialogue_id]["log"]):
+                if turn % 2:
+                    speaker, emotion = "system", None
+                else:
+                    label = utterance["emotion"][3]["emotion"]
+                    if label not in EMOWOZ_MAP:
+                        raise ValueError(f"Unknown EmoWOZ label {label!r} in {dialogue_id}")
+                    speaker, emotion = "user", EMOWOZ_MAP[label]
+                rows[split].append(
+                    (dialogue_id.removesuffix(".json"), turn, speaker, utterance["text"], emotion)
+                )
+    return rows
+
+
 def _dialogue_key(texts):
     return tuple(re.sub(r"\s+", " ", text).strip() for text in texts)
 
@@ -98,7 +132,9 @@ def _finish(frame, dataset, split):
     frame["split"] = split
     frame["source_split"] = "test" if split == "test_dedup" else split
     frame["dialogue_id"] = dataset + "-" + split + "-" + frame["source_dialogue_id"].astype(str)
-    if frame["emotion"].isna().any():
+    # Only EmoWOZ system turns are unlabelled; any other missing label is unknown.
+    unlabelled = frame["speaker"].eq("system") if dataset == "emowoz" else False
+    if (frame["emotion"].isna() != unlabelled).any():
         raise ValueError(f"Unknown emotion label in {dataset}/{split}")
     if frame[["raw_text", "speaker"]].isna().any().any():
         raise ValueError(f"Missing text or speaker in {dataset}/{split}")
@@ -112,15 +148,16 @@ def load(dataset: str, splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
     """Return annotated utterances for the requested splits, in requested order.
 
     Defaults to train/dev/test; request DailyDialog test_dedup explicitly.
-    ``root`` contains meld/ and dailydialog/. No downloads or writes occur.
-    Within each split, rows follow numeric source dialogue ID and turn order.
+    ``root`` contains meld/, dailydialog/ and emowoz/. No downloads or writes occur.
+    Within each split, rows follow source dialogue ID and turn order.
     """
-    if dataset not in ("meld", "dailydialog"):
-        raise ValueError(f"Unknown dataset {dataset!r}; choose meld or dailydialog")
+    if dataset not in DATASETS:
+        raise ValueError(f"Unknown dataset {dataset!r}; choose from {DATASETS}")
     selected = _select_splits(dataset, splits)
     raw = Path(root) / dataset
     frames = []
     dialogues = {}
+    emowoz = _read_emowoz(raw, selected) if dataset == "emowoz" else {}
     if dataset == "dailydialog":
         needed = {"train", "test"} if "test_dedup" in selected else set()
         needed.update(s for s in selected if s != "test_dedup")
@@ -136,6 +173,11 @@ def load(dataset: str, splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
                     "raw_text": source["Utterance"],
                     "emotion": source["Emotion"].map(MELD_MAP),
                 }
+            )
+        elif dataset == "emowoz":
+            frame = pd.DataFrame(
+                emowoz[split],
+                columns=["source_dialogue_id", "turn", "speaker", "raw_text", "emotion"],
             )
         else:
             source_split = "test" if split == "test_dedup" else split
@@ -176,6 +218,11 @@ def load_meld(splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
 def load_dailydialog(splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
     """Convenience form of load('dailydialog', splits, root=root)."""
     return load("dailydialog", splits, root=root)
+
+
+def load_emowoz(splits=None, *, root: Path = DATA_ROOT) -> pd.DataFrame:
+    """Convenience form of load('emowoz', splits, root=root)."""
+    return load("emowoz", splits, root=root)
 
 
 def duplicate_dialogues(reference, target):

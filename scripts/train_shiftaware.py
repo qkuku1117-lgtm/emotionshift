@@ -22,7 +22,8 @@ import yaml
 from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 
-from emotionshift.data import DATA_ROOT, EMOTIONS, load
+from emotionshift.data import DATA_ROOT, load
+from emotionshift.data.labels import DATASETS, emotions
 from emotionshift.data.torch_data import DialogueCollator, DialogueDataset
 from emotionshift.eval.metrics import HEADLINE, scores
 from emotionshift.models.shiftaware import (
@@ -87,7 +88,7 @@ def log_line(row: dict) -> None:
 
 
 @torch.inference_mode()
-def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float]:
+def evaluate(model, loader, criterion, device, labels, *, dtype=None) -> dict[str, float]:
     model.eval()
     gold, predicted, shifts, shift_predictions, gates = [], [], [], [], []
     loss_sum = 0.0
@@ -102,19 +103,19 @@ def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float
             loss = criterion(output, batch["labels"], batch["shift_labels"], batch["shift_mask"])[
                 "total"
             ]
-        valid = batch["turn_mask"]
+        labelled = batch["labels"] >= 0  # excludes padding and unlabelled turns
         eligible = batch["shift_mask"] & output.shift_mask
-        gold.extend(batch["labels"][valid].cpu().tolist())
-        predicted.extend(output.emotion_probs[valid].argmax(-1).cpu().tolist())
+        gold.extend(batch["labels"][labelled].cpu().tolist())
+        predicted.extend(output.emotion_probs[labelled].argmax(-1).cpu().tolist())
         shifts.extend(batch["shift_labels"][eligible].int().cpu().tolist())
         shift_predictions.extend((output.shift_probs[eligible] >= 0.5).int().cpu().tolist())
         gates.extend(output.mixing_weights[eligible].float().cpu().tolist())
-        n = int(valid.sum())
+        n = int(labelled.sum())
         loss_sum += loss.item() * n
         count += n
     if not count:
         raise ValueError("Dev loader must be nonempty")
-    metrics = scores([EMOTIONS[i] for i in gold], [EMOTIONS[i] for i in predicted])
+    metrics = scores([labels[i] for i in gold], [labels[i] for i in predicted], labels)
     # Mean weight on the evidence head; near 1 on both groups means the gate collapsed.
     gate, shifted = np.array(gates), np.array(shifts, dtype=bool)
     return {
@@ -122,6 +123,8 @@ def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float
         "weighted_f1": float(metrics["weighted_f1"]),
         "macro_f1": float(metrics["macro_f1"]),
         "micro_f1_no_neutral": float(metrics["micro_f1_no_neutral"]),
+        "weighted_f1_no_neutral": float(metrics["weighted_f1_no_neutral"]),
+        "macro_f1_no_neutral": float(metrics["macro_f1_no_neutral"]),
         "shift_f1": float(f1_score(shifts, shift_predictions, zero_division=0)) if shifts else 0.0,
         "n": count,
         "gate_shift": float(gate[shifted].mean()) if shifted.any() else None,
@@ -132,7 +135,7 @@ def evaluate(model, loader, criterion, device, *, dtype=None) -> dict[str, float
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset", choices=("meld", "dailydialog"), required=True)
+    parser.add_argument("--dataset", choices=DATASETS, required=True)
     parser.add_argument("--data-root", type=Path, default=DATA_ROOT)
     parser.add_argument("--architecture", type=Path, default=Path("configs/shiftaware.yaml"))
     parser.add_argument(
@@ -196,7 +199,8 @@ def main():
     if encoder.embedding_dim != architecture.input_dim:
         raise ValueError("Architecture input_dim must match the pretrained encoder hidden size")
     model = TextShiftAware(encoder, ShiftAware(architecture)).to(device)
-    class_weights = emotion_class_weights(train_frame["emotion"], settings.class_weighting)
+    labels = emotions(args.dataset)
+    class_weights = emotion_class_weights(train_frame["emotion"], settings.class_weighting, labels)
     criterion = ShiftAwareLoss(
         class_weights=class_weights,
         shift_weight=settings.shift_weight,
@@ -256,7 +260,7 @@ def main():
         "objective": objective,
         "selection": settings.selection,
         "class_weights": (
-            dict(zip(EMOTIONS, class_weights.tolist(), strict=True))
+            dict(zip(labels, class_weights.tolist(), strict=True))
             if class_weights is not None
             else None
         ),
@@ -288,7 +292,7 @@ def main():
             scaler=scaler,
             log=lambda row, epoch=epoch: log_line({"epoch": epoch, **row}),
         )
-        dev_result = evaluate(model, dev_loader, criterion, device, dtype=dtype)
+        dev_result = evaluate(model, dev_loader, criterion, device, labels, dtype=dtype)
         score = selection_score(dev_result, objective, settings.selection)
         improved = score > best_score + settings.min_delta
         if improved:

@@ -560,3 +560,27 @@ def test_invalid_dialogue_inputs(config):
         model(torch.randn(1, 2, 12), torch.tensor([[-1, -1]]))
     with pytest.raises(ValueError, match="input_dim"):
         model(torch.randn(1, 2, 13), torch.tensor([[0, 1]]))
+
+
+def test_unlabelled_turns_add_context_but_no_emotion_loss(any_config):
+    # EmoWOZ system turns carry label -100: they are encoded, but not supervised.
+    torch.manual_seed(0)
+    model = ShiftAware(any_config)
+    output = model(torch.randn(1, 4, 12), torch.tensor([[0, 1, 0, 1]]))
+    labels = torch.tensor([[0, -100, 6, -100]])
+    shift_mask = torch.tensor([[False, False, True, False]])
+    targets = torch.tensor([[0.0, 0.0, 1.0, 0.0]])
+    weights = torch.arange(1, 8).float()
+    losses = ShiftAwareLoss(class_weights=weights)(output, labels, targets, shift_mask)
+    keep = labels[0] >= 0
+    torch.testing.assert_close(
+        losses["emotion"],
+        nn.functional.nll_loss(output.emotion_log_probs[0][keep], labels[0][keep], weight=weights),
+    )
+    torch.testing.assert_close(
+        losses["shift"],
+        nn.functional.binary_cross_entropy_with_logits(
+            output.shift_logits[0][2:3].float(), targets[0][2:3]
+        ),
+    )
+    assert all(torch.isfinite(value) for value in losses.values())

@@ -103,16 +103,22 @@ def selection_score(metrics: dict, headline: str, mode: str) -> float:
     return (float(metrics[headline]) + float(metrics["macro_f1"])) / 2
 
 
-def emotion_class_weights(emotions: pd.Series, mode: str) -> torch.Tensor | None:
-    """Inverse-frequency weights from training labels; sqrt_inverse softens them."""
+def emotion_class_weights(
+    emotions: pd.Series, mode: str, labels: list[str] = EMOTIONS
+) -> torch.Tensor | None:
+    """Inverse-frequency weights from training labels; sqrt_inverse softens them.
+
+    Unlabelled turns (missing values) are ignored.
+    """
     if mode not in CLASS_WEIGHTING:
         raise ValueError(f"class_weighting must be one of {CLASS_WEIGHTING}")
     if mode == "none":
         return None
-    counts = emotions.value_counts().reindex(EMOTIONS, fill_value=0)
+    emotions = emotions.dropna()
+    counts = emotions.value_counts().reindex(labels, fill_value=0)
     if (counts == 0).any():
         raise ValueError(f"No training examples for {list(counts[counts == 0].index)}")
-    weights = torch.tensor((len(emotions) / (len(EMOTIONS) * counts)).to_numpy(), dtype=torch.float)
+    weights = torch.tensor((len(emotions) / (len(labels) * counts)).to_numpy(), dtype=torch.float)
     return weights.sqrt() if mode == "sqrt_inverse" else weights
 
 

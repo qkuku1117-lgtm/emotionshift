@@ -17,7 +17,8 @@ import torch
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
-from emotionshift.data import DATA_ROOT, EMOTIONS, load
+from emotionshift.data import DATA_ROOT, load
+from emotionshift.data.labels import emotions
 from emotionshift.data.torch_data import DialogueCollator, DialogueDataset
 from emotionshift.eval.metrics import scores
 from emotionshift.models.shiftaware.training import autocast_dtype, load_trained_model, move_batch
@@ -72,7 +73,10 @@ def collect(model, loader, device, dtype) -> dict[str, np.ndarray]:
         last = torch.where(previous_own, positions, 0).amax(-1)
         previous = probs.gather(1, last[..., None].expand(-1, -1, probs.shape[-1]))
         parts["derived_shift_prob"].append((1 - (probs * previous).sum(-1))[valid])
-    return {name: torch.cat(values).cpu().numpy() for name, values in parts.items()}
+    arrays = {name: torch.cat(values).cpu().numpy() for name, values in parts.items()}
+    # Score labelled turns only; unlabelled ones (EmoWOZ system turns) are context.
+    labelled = arrays["gold"] >= 0
+    return {name: values[labelled] for name, values in arrays.items()}
 
 
 def main():
@@ -95,7 +99,8 @@ def main():
         collate_fn=DialogueCollator(tokenizer, max_length=checkpoint["training"]["max_length"]),
     )
     a = collect(model, loader, device, autocast_dtype(device, checkpoint["training"]["amp"]))
-    gold = [EMOTIONS[i] for i in a["gold"]]
+    labels = emotions(checkpoint["dataset"])
+    gold = [labels[i] for i in a["gold"]]
     eligible, shifted = a["eligible"], a["shift"] & a["eligible"]
     stable = eligible & ~a["shift"]
     result = {
@@ -105,8 +110,9 @@ def main():
         "heads": {
             name: {
                 key: round(float(value), 4)
-                for key, value in scores(gold, [EMOTIONS[i] for i in a[name]]).items()
-                if key in ("weighted_f1", "macro_f1", "micro_f1_no_neutral")
+                for key, value in scores(gold, [labels[i] for i in a[name]], labels).items()
+                if key
+                in ("weighted_f1", "macro_f1", "micro_f1_no_neutral", "weighted_f1_no_neutral")
             }
             for name in HEADS
         },
@@ -126,9 +132,10 @@ def main():
                 key: round(float(value), 4)
                 for key, value in scores(
                     [gold[i] for i in np.flatnonzero(rows)],
-                    [EMOTIONS[i] for i in a["mixture"][rows]],
+                    [labels[i] for i in a["mixture"][rows]],
+                    labels,
                 ).items()
-                if key in ("n", "weighted_f1", "micro_f1_no_neutral")
+                if key in ("n", "weighted_f1", "micro_f1_no_neutral", "weighted_f1_no_neutral")
             }
             for stratum, rows in (("first", ~eligible), ("stable", stable), ("shift", shifted))
         },

@@ -48,3 +48,21 @@ def test_bootstrap_of_perfect_vs_noisy_is_positive():
     result = paired_bootstrap(dialogues(), "pred", "perfect", n_boot=200)
     assert result["ci_low"] > 0
     assert result["diff"] == pytest.approx(1 - scores(GOLD, PRED)["weighted_f1"])
+
+
+def test_no_neutral_metrics_drop_neutral_from_the_averages():
+    from emotionshift.data.labels import emotions
+
+    labels = emotions("emowoz")
+    gold = ["neutral", "neutral", "satisfied", "satisfied", "dissatisfied"]
+    pred = ["neutral", "satisfied", "satisfied", "neutral", "dissatisfied"]
+    s = scores(gold, pred, labels)
+    emotional = [e for e in labels if e != "neutral"]
+    assert s["weighted_f1_no_neutral"] == pytest.approx(
+        f1_score(gold, pred, labels=emotional, average="weighted", zero_division=0)
+    )
+    assert s["macro_f1_no_neutral"] == pytest.approx(
+        f1_score(gold, pred, labels=emotional, average="macro", zero_division=0)
+    )
+    # Satisfied F1 0.5 (support 2) and dissatisfied F1 1.0 (support 1).
+    assert s["weighted_f1_no_neutral"] == pytest.approx((0.5 * 2 + 1.0) / 3)

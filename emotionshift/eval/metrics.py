@@ -2,6 +2,9 @@
 
 * MELD headline: weighted-F1 over the 7 classes.
 * DailyDialog headline: micro-F1 *excluding neutral* (standard in the literature).
+* EmoWOZ headline: weighted-F1 *excluding neutral* over its own seven labels,
+  with macro-F1 excluding neutral alongside (Feng et al., 2022). Score only
+  labelled (user) turns: pass ``labels=emotions("emowoz")``.
 * Always also: macro-F1, per-class F1, confusion matrix.
 * Stratified: the same metrics per stratum (first / stable / shift) and per
   shift type, with ``n`` in every cell.
@@ -18,10 +21,21 @@ from sklearn.metrics import confusion_matrix, f1_score
 from ..data.labels import EMOTIONS
 from ..data.shifts import SHIFT_TYPES, STRATA
 
-HEADLINE = {"meld": "weighted_f1", "dailydialog": "micro_f1_no_neutral"}
+HEADLINE = {
+    "meld": "weighted_f1",
+    "dailydialog": "micro_f1_no_neutral",
+    "emowoz": "weighted_f1_no_neutral",
+}
 
 
-METRICS = ("accuracy", "weighted_f1", "macro_f1", "micro_f1_no_neutral")
+METRICS = (
+    "accuracy",
+    "weighted_f1",
+    "macro_f1",
+    "micro_f1_no_neutral",
+    "weighted_f1_no_neutral",
+    "macro_f1_no_neutral",
+)
 
 
 def scores_from_confusion(cm, labels=EMOTIONS):
@@ -38,6 +52,8 @@ def scores_from_confusion(cm, labels=EMOTIONS):
         "weighted_f1": float((f1 * support).sum() / support.sum()) if support.sum() else 0.0,
         "macro_f1": float(f1.mean()),
         "micro_f1_no_neutral": float(micro),
+        "weighted_f1_no_neutral": (float((f1[emo] * support[emo]).sum() / sup_e) if sup_e else 0.0),
+        "macro_f1_no_neutral": float(f1[emo].mean()),
     }
 
 
@@ -50,46 +66,51 @@ def scores(gold, pred, labels=EMOTIONS) -> dict:
             "weighted_f1": 0.0,
             "macro_f1": 0.0,
             "micro_f1_no_neutral": 0.0,
+            "weighted_f1_no_neutral": 0.0,
+            "macro_f1_no_neutral": 0.0,
             "accuracy": float("nan"),
         }
+    emotional = [e for e in labels if e != "neutral"]
     return {
         "n": len(gold),
         "weighted_f1": f1_score(gold, pred, labels=labels, average="weighted", zero_division=0),
         "macro_f1": f1_score(gold, pred, labels=labels, average="macro", zero_division=0),
         "micro_f1_no_neutral": f1_score(
-            gold,
-            pred,
-            labels=[e for e in labels if e != "neutral"],
-            average="micro",
-            zero_division=0,
+            gold, pred, labels=emotional, average="micro", zero_division=0
+        ),
+        "weighted_f1_no_neutral": f1_score(
+            gold, pred, labels=emotional, average="weighted", zero_division=0
+        ),
+        "macro_f1_no_neutral": f1_score(
+            gold, pred, labels=emotional, average="macro", zero_division=0
         ),
         "accuracy": float((gold == pred).mean()) if len(gold) else float("nan"),
     }
 
 
-def per_class_f1(gold, pred) -> pd.DataFrame:
-    f1 = f1_score(gold, pred, labels=EMOTIONS, average=None, zero_division=0)
-    support = pd.Series(gold).value_counts().reindex(EMOTIONS, fill_value=0)
-    return pd.DataFrame({"emotion": EMOTIONS, "f1": f1, "support": support.values})
+def per_class_f1(gold, pred, labels=EMOTIONS) -> pd.DataFrame:
+    f1 = f1_score(gold, pred, labels=labels, average=None, zero_division=0)
+    support = pd.Series(gold).value_counts().reindex(labels, fill_value=0)
+    return pd.DataFrame({"emotion": labels, "f1": f1, "support": support.values})
 
 
-def confusion(gold, pred) -> pd.DataFrame:
-    cm = confusion_matrix(gold, pred, labels=EMOTIONS)
+def confusion(gold, pred, labels=EMOTIONS) -> pd.DataFrame:
+    cm = confusion_matrix(gold, pred, labels=labels)
     return pd.DataFrame(
-        cm, index=[f"gold_{e}" for e in EMOTIONS], columns=[f"pred_{e}" for e in EMOTIONS]
+        cm, index=[f"gold_{e}" for e in labels], columns=[f"pred_{e}" for e in labels]
     )
 
 
-def stratified(df: pd.DataFrame, pred_col: str = "pred") -> pd.DataFrame:
+def stratified(df: pd.DataFrame, pred_col: str = "pred", labels=EMOTIONS) -> pd.DataFrame:
     """Scores per stratum and per shift type. ``df`` needs emotion, stratum,
     shift_type and ``pred_col``."""
-    rows = [{"group": "all", **scores(df["emotion"], df[pred_col])}]
+    rows = [{"group": "all", **scores(df["emotion"], df[pred_col], labels)}]
     for s in STRATA:
         sub = df[df["stratum"] == s]
-        rows.append({"group": f"stratum:{s}", **scores(sub["emotion"], sub[pred_col])})
+        rows.append({"group": f"stratum:{s}", **scores(sub["emotion"], sub[pred_col], labels)})
     for t in SHIFT_TYPES:
         sub = df[df["shift_type"] == t]
-        rows.append({"group": f"shift_type:{t}", **scores(sub["emotion"], sub[pred_col])})
+        rows.append({"group": f"shift_type:{t}", **scores(sub["emotion"], sub[pred_col], labels)})
     return pd.DataFrame(rows)
 
 
@@ -111,7 +132,12 @@ def derived_shift_detection(df: pd.DataFrame, pred_col: str = "pred") -> dict:
 
 
 def bootstrap_ci(
-    df: pd.DataFrame, metric: str, pred_col: str = "pred", n_boot: int = 1000, seed: int = 0
+    df: pd.DataFrame,
+    metric: str,
+    pred_col: str = "pred",
+    n_boot: int = 1000,
+    seed: int = 0,
+    labels=EMOTIONS,
 ) -> tuple[float, float]:
     """95% percentile CI of ``metric``, resampling dialogues with replacement."""
     rng = np.random.default_rng(seed)
@@ -122,7 +148,7 @@ def bootstrap_ci(
     for _ in range(n_boot):
         pick = rng.integers(0, len(idx_by_key), len(idx_by_key))
         ix = np.concatenate([idx_by_key[p] for p in pick])
-        vals.append(scores(gold[ix], pred[ix])[metric])
+        vals.append(scores(gold[ix], pred[ix], labels)[metric])
     return float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))
 
 
