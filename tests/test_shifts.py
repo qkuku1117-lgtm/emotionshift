@@ -1,0 +1,87 @@
+import pandas as pd
+import pytest
+
+from emotionshift.data import add_shift_columns, clean_text, shift_type
+
+
+def toy_dialogue():
+    #           A          B        A        B        A
+    emotions = ["neutral", "joy", "anger", "joy", "anger"]
+    return pd.DataFrame(
+        {
+            "dialogue_id": "d0",
+            "turn": range(5),
+            "speaker": ["A", "B", "A", "B", "A"],
+            "text": ["x"] * 5,
+            "emotion": emotions,
+        }
+    )
+
+
+def test_strata_follow_the_same_speaker():
+    out = add_shift_columns(toy_dialogue())
+    assert out["stratum"].tolist() == ["first", "first", "shift", "stable", "stable"]
+    assert out["prev_emotion"].tolist()[2:] == ["neutral", "joy", "anger"]
+    assert out["turn_gap"].tolist()[2:] == [2, 2, 2]
+
+
+def test_shift_type_only_on_shift_rows():
+    out = add_shift_columns(toy_dialogue())
+    assert out["shift_type"].isna().tolist() == [True, True, False, True, True]
+    assert out.loc[2, "shift_type"] == "onset"
+
+
+def test_speakers_in_different_dialogues_do_not_share_history():
+    a, b = toy_dialogue(), toy_dialogue()
+    b["dialogue_id"] = "d1"
+    out = add_shift_columns(pd.concat([a, b], ignore_index=True))
+    assert out.loc[5, "stratum"] == "first"
+
+
+@pytest.mark.parametrize(
+    ("prev", "curr", "expected"),
+    [
+        ("neutral", "anger", "onset"),
+        ("sadness", "neutral", "offset"),
+        ("joy", "anger", "valence_flip"),
+        ("fear", "joy", "valence_flip"),
+        ("anger", "sadness", "within_negative"),
+        ("surprise", "joy", "surprise"),
+        ("anger", "surprise", "surprise"),
+        ("dissatisfied", "apologetic", "within_negative"),
+        ("satisfied", "dissatisfied", "valence_flip"),
+        ("excited", "satisfied", "within_positive"),
+    ],
+)
+def test_shift_type(prev, curr, expected):
+    assert shift_type(prev, curr) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("You\u2019re a genius!", "You're a genius!"),
+        ("You\x92re a genius!", "You're a genius!"),
+        ("I \u2019 ll call you , okay ?", "I ' ll call you , okay ?"),
+        ("Wait…", "Wait..."),
+    ],
+)
+def test_clean_text(raw, expected):
+    assert clean_text(raw) == expected
+
+
+def test_unlabelled_turns_are_skipped_but_counted_in_gaps():
+    frame = pd.DataFrame(
+        {
+            "dialogue_id": "d0",
+            "turn": range(5),
+            "speaker": ["user", "system", "user", "system", "user"],
+            "text": ["x"] * 5,
+            "emotion": ["neutral", None, "neutral", None, "satisfied"],
+        }
+    )
+    out = add_shift_columns(frame).set_index("turn")
+    assert out.loc[[1, 3], "stratum"].isna().all()
+    assert out.loc[[0, 2, 4], "stratum"].tolist() == ["first", "stable", "shift"]
+    assert out.loc[4, "shift_type"] == "onset"  # previous labelled turn is neutral
+    assert out.loc[[2, 3, 4], "turn_gap"].tolist() == [2, 2, 2]

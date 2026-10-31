@@ -47,7 +47,7 @@ OUT = ROOT   # --quick writes to outputs_quick/ (git-ignored) so it never overwr
 
 def subset(df: pd.DataFrame, n_dialogues: int) -> pd.DataFrame:
     """First ``n_dialogues`` dialogues of every split (``--quick``)."""
-    return df[df.dialogue_id < n_dialogues]
+    return df[df.source_dialogue_id < n_dialogues]
 
 
 def pred_path(model: str, dataset: str, split: str, seed: int) -> Path:

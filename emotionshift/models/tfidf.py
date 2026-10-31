@@ -14,6 +14,7 @@ Usage (also what the Streamlit demo calls)::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TypedDict
 
 import joblib
 import numpy as np
@@ -26,12 +27,21 @@ from sklearn.svm import LinearSVC
 from ..data.labels import EMOTIONS
 
 
+class TfidfSelection(TypedDict):
+    """The tuned fields recorded in dev grids and result summaries."""
+
+    classifier: str
+    C: float
+    class_weight: str | None
+    features: str
+
+
 @dataclass
 class TfidfConfig:
-    classifier: str = "svm"            # "svm" (LinearSVC) or "logreg"
+    classifier: str = "svm"  # "svm" (LinearSVC) or "logreg"
     C: float = 1.0
-    class_weight: str | None = None    # None or "balanced"
-    features: str = "word+char"        # "word" or "word+char"
+    class_weight: str | None = None  # None or "balanced"
+    features: str = "word+char"  # "word" or "word+char"
     word_ngram: tuple = (1, 2)
     char_ngram: tuple = (2, 5)
     min_df: int = 2
@@ -40,21 +50,38 @@ class TfidfConfig:
 
 
 def _features(cfg: TfidfConfig):
-    word = TfidfVectorizer(lowercase=True, ngram_range=tuple(cfg.word_ngram), min_df=cfg.min_df,
-                           sublinear_tf=True, token_pattern=r"(?u)\b\w+\b|[!?]")
+    word = TfidfVectorizer(
+        lowercase=True,
+        ngram_range=tuple(cfg.word_ngram),
+        min_df=cfg.min_df,
+        sublinear_tf=True,
+        token_pattern=r"(?u)\b\w+\b|[!?]",
+    )
     if cfg.features == "word":
         return word
-    char = TfidfVectorizer(lowercase=True, analyzer="char_wb", ngram_range=tuple(cfg.char_ngram),
-                           min_df=cfg.min_df, sublinear_tf=True)
+    char = TfidfVectorizer(
+        lowercase=True,
+        analyzer="char_wb",
+        ngram_range=tuple(cfg.char_ngram),
+        min_df=cfg.min_df,
+        sublinear_tf=True,
+    )
     return FeatureUnion([("word", word), ("char", char)])
 
 
 def _classifier(cfg: TfidfConfig):
     if cfg.classifier == "svm":
-        return LinearSVC(C=cfg.C, class_weight=cfg.class_weight, random_state=cfg.seed, max_iter=5000)
+        return LinearSVC(
+            C=cfg.C, class_weight=cfg.class_weight, random_state=cfg.seed, max_iter=5000
+        )
     if cfg.classifier == "logreg":
-        return LogisticRegression(C=cfg.C, class_weight=cfg.class_weight, random_state=cfg.seed,
-                                  max_iter=2000, solver="lbfgs")
+        return LogisticRegression(
+            C=cfg.C,
+            class_weight=cfg.class_weight,
+            random_state=cfg.seed,
+            max_iter=2000,
+            solver="lbfgs",
+        )
     raise ValueError(cfg.classifier)
 
 
@@ -76,7 +103,11 @@ class TfidfBaseline:
         (good for ranking and display, not calibrated)."""
         clf = self.pipe.named_steps["clf"]
         X = self.pipe.named_steps["tfidf"].transform(list(texts))
-        raw = clf.predict_proba(X) if hasattr(clf, "predict_proba") else softmax(clf.decision_function(X), axis=1)
+        raw = (
+            clf.predict_proba(X)
+            if hasattr(clf, "predict_proba")
+            else softmax(clf.decision_function(X), axis=1)
+        )
         order = [list(clf.classes_).index(e) for e in EMOTIONS]
         return raw[:, order]
 
@@ -94,7 +125,7 @@ class TfidfBaseline:
         joblib.dump({"cfg": self.cfg, "pipe": self.pipe}, path)
 
     @classmethod
-    def load(cls, path) -> "TfidfBaseline":
+    def load(cls, path) -> TfidfBaseline:
         obj = joblib.load(path)
         m = cls(obj["cfg"])
         m.pipe = obj["pipe"]

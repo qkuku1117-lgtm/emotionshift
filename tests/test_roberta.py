@@ -20,8 +20,8 @@ TEXTS = ["Oh my God!", "Yeah.", "I'm so sorry about your dad."]
 @pytest.fixture(scope="module")
 def model():
     df = load_meld()
-    tr = df[(df.split == "train") & (df.dialogue_id < 15)]
-    dev = df[(df.split == "dev") & (df.dialogue_id < 5)]
+    tr = df[(df.split == "train") & (df.source_dialogue_id < 15)]
+    dev = df[(df.split == "dev") & (df.source_dialogue_id < 5)]
     cfg = RobertaConfig(model_name=TINY, epochs=1, batch_size=16)
     return RobertaUtterance(cfg, device="cpu").fit(tr.text, tr.emotion, dev.text, dev.emotion)
 

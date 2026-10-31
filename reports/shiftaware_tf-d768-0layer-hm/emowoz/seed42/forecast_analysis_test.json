@@ -1,0 +1,128 @@
+{
+ "run_dir": "models/shiftaware/emowoz_tf-d768-0layer-hm_seed42",
+ "split": "test",
+ "context_layers": 0,
+ "fusion": "none",
+ "attention": {
+  "all": {
+   "n": 7534,
+   "previous_turn": 0.2033465149419796,
+   "own_previous_turn": 0.1327584479603682,
+   "older": 0.43295534621065773,
+   "null": 0.23093969088699445
+  },
+  "stable": {
+   "n": 4884,
+   "previous_turn": 0.20427284601608248,
+   "own_previous_turn": 0.1321083314579139,
+   "older": 0.40454155113281076,
+   "null": 0.25907727139319287
+  },
+  "shift": {
+   "n": 2650,
+   "previous_turn": 0.20163926929446324,
+   "own_previous_turn": 0.13395662494074062,
+   "older": 0.48532250664847076,
+   "null": 0.17908159911632537
+  },
+  "neutral": {
+   "n": 4950,
+   "previous_turn": 0.20513359116898341,
+   "own_previous_turn": 0.14113635084770546,
+   "older": 0.38765050068610546,
+   "null": 0.26607955729720567
+  },
+  "fearful": {
+   "n": 16,
+   "previous_turn": 0.18579579144716263,
+   "own_previous_turn": 0.1512425800319761,
+   "older": 0.44161670678295195,
+   "null": 0.22134492173790932
+  },
+  "dissatisfied": {
+   "n": 604,
+   "previous_turn": 0.16229992790844613,
+   "own_previous_turn": 0.09614479523738044,
+   "older": 0.6061823192077214,
+   "null": 0.13537295764645205
+  },
+  "apologetic": {
+   "n": 73,
+   "previous_turn": 0.18445607563098,
+   "own_previous_turn": 0.13809326359976645,
+   "older": 0.45070878916407286,
+   "null": 0.22674187160518072
+  },
+  "abusive": {
+   "n": 17,
+   "previous_turn": 0.12392515524783555,
+   "own_previous_turn": 0.1168198894490214,
+   "older": 0.6394065987757024,
+   "null": 0.11984835652744069
+  },
+  "excited": {
+   "n": 57,
+   "previous_turn": 0.23310815333797222,
+   "own_previous_turn": 0.15180576723395733,
+   "older": 0.35835786320661245,
+   "null": 0.256728216221458
+  },
+  "satisfied": {
+   "n": 1817,
+   "previous_turn": 0.2128455103280194,
+   "own_previous_turn": 0.12128024080221839,
+   "older": 0.49841362677707274,
+   "null": 0.16746062209268947
+  }
+ },
+ "intact": {
+  "recognition": 0.7534709747606032,
+  "forecast_shift_auroc": 0.793831146755675,
+  "forecast_emotion": 0.5450661135188939,
+  "forecast_class_auroc": {
+   "fearful": 0.7733522878425113,
+   "dissatisfied": 0.9269048096862667,
+   "apologetic": 0.7840404808198982,
+   "abusive": 0.8358465908646284,
+   "excited": 0.6604299970201014,
+   "satisfied": 0.8828518272752748
+  },
+  "not_last": {
+   "n": 6434,
+   "forecast_shift_auroc": 0.7766157052593002,
+   "forecast_class_auroc": {
+    "fearful": 0.7566804300405111,
+    "dissatisfied": 0.9176755907285059,
+    "apologetic": 0.7786794736744839,
+    "abusive": 0.7932025924550454,
+    "excited": 0.6451823454801978,
+    "satisfied": 0.8325773383298907
+   }
+  }
+ },
+ "blank_system": {
+  "recognition": 0.7525112065463918,
+  "forecast_shift_auroc": 0.5429161451331262,
+  "forecast_emotion": 0.035947071045008085,
+  "forecast_class_auroc": {
+   "fearful": 0.5716696594839052,
+   "dissatisfied": 0.6404282895176935,
+   "apologetic": 0.5895432504732372,
+   "abusive": 0.6461745533653132,
+   "excited": 0.5686244835037976,
+   "satisfied": 0.7128523211243509
+  },
+  "not_last": {
+   "n": 6434,
+   "forecast_shift_auroc": 0.60034935562366,
+   "forecast_class_auroc": {
+    "fearful": 0.5589065908382673,
+    "dissatisfied": 0.6456554559006759,
+    "apologetic": 0.6004613202491176,
+    "abusive": 0.6349238675979059,
+    "excited": 0.5718921461044051,
+    "satisfied": 0.6116966715221888
+   }
+  }
+ }
+}

@@ -1,28 +1,41 @@
 #!/usr/bin/env bash
-# Download MELD and DailyDialog into data/raw/ (run from the repo root).
-#
-# MELD:        official CSVs from declare-lab/MELD.
-# DailyDialog: official 11,118 / 1,000 / 1,000 split as JSON lines, taken from
-#              declare-lab/conv-emotion (DialogueRNN/dailydialog.zip), because
-#              the original host (yanran.li) is often unreachable.
+# Download the public datasets into data/raw/ (gitignored).
 set -euo pipefail
-cd "$(dirname "$0")/.."
 
-mkdir -p data/raw/meld data/raw/dailydialog
+DATA="$(cd "$(dirname "$0")/.." && pwd)/data/raw"
+mkdir -p "$DATA/meld" "$DATA/dailydialog" "$DATA/emowoz"
 
 MELD=https://raw.githubusercontent.com/declare-lab/MELD/master/data/MELD
-for s in train dev test; do
-  curl -fsSL "$MELD/${s}_sent_emo.csv" -o "data/raw/meld/${s}_sent_emo.csv"
+for split in train dev test; do
+  curl -sfL -o "$DATA/meld/${split}_sent_emo.csv" "$MELD/${split}_sent_emo.csv"
 done
 
-tmp=$(mktemp -d)
-curl -fsSL https://raw.githubusercontent.com/declare-lab/conv-emotion/master/DialogueRNN/dailydialog.zip -o "$tmp/dd.zip"
-python3 - "$tmp/dd.zip" <<'EOF'
-import sys, zipfile
-z = zipfile.ZipFile(sys.argv[1])
-for s in ["train", "valid", "test"]:
-    open(f"data/raw/dailydialog/{s}.json", "wb").write(z.read(f"dailydialog/{s}.json"))
-EOF
-rm -rf "$tmp"
+# MELD-FR (SemEval-2024 Task 10, subtask C): emotion-flip triggers on MELD dialogues
+EFR="https://raw.githubusercontent.com/LCS2-IIITD/EDiReF-SemEval2024/main/Data/Task%20C"
+for split in train val test; do
+  curl -sfL -o "$DATA/meld/MELD_${split}_efr.json" "$EFR/MELD_${split}_efr.json"
+done
 
-echo "Done:"; wc -l data/raw/meld/*.csv data/raw/dailydialog/*.json
+# DailyDialog JSON-lines source shared by every model and notebook.
+task_tmp=$(mktemp -d)
+trap 'rm -rf "$task_tmp"' EXIT
+curl -fsSL https://raw.githubusercontent.com/declare-lab/conv-emotion/master/DialogueRNN/dailydialog.zip -o "$task_tmp/dd.zip"
+python3 - "$task_tmp/dd.zip" "$DATA/dailydialog" <<'EOF'
+from pathlib import Path
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    for split in ["train", "valid", "test"]:
+        (Path(sys.argv[2]) / f"{split}.json").write_bytes(
+            archive.read(f"dailydialog/{split}.json")
+        )
+EOF
+
+# EmoWOZ 1.0 (Feng et al., 2022): MultiWOZ and DialMAGE dialogues plus the official split.
+EMOWOZ=https://zenodo.org/record/6506504/files
+for file in emowoz-multiwoz.json emowoz-dialmage.json data-split.json; do
+  curl -sfL -o "$DATA/emowoz/$file" "$EMOWOZ/$file"
+done
+
+echo "Data written to $DATA"

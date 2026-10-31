@@ -1,0 +1,10 @@
+group,n,weighted_f1,macro_f1,micro_f1_no_neutral,accuracy
+all,7740,0.854,0.5402,0.5734,0.8554
+stratum:first,2000,0.8807,0.5075,0.5487,0.884
+stratum:stable,4707,0.8925,0.4717,0.4678,0.8825
+stratum:shift,1033,0.6752,0.5437,0.6848,0.6767
+shift_type:onset,618,0.7266,0.4638,0.7318,0.5939
+shift_type:offset,363,0.9196,0.1314,0.0,0.8512
+shift_type:surprise,39,0.5394,0.2751,0.5806,0.4615
+shift_type:within_negative,5,0.4667,0.2381,0.6,0.6
+shift_type:valence_flip,8,0.3875,0.1286,0.4,0.25

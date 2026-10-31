@@ -20,7 +20,12 @@ def main():
         archive = ZipFile(BytesIO(response.read()))
     for split in ("train", "valid", "test"):
         (dd / f"{split}.json").write_bytes(archive.read(f"dailydialog/{split}.json"))
-    print("Downloaded shared MELD and DailyDialog sources to", ROOT)
+    emowoz = ROOT / "emowoz"
+    emowoz.mkdir(parents=True, exist_ok=True)
+    for name in ("emowoz-multiwoz.json", "emowoz-dialmage.json", "data-split.json"):
+        with urlopen(f"https://zenodo.org/record/6506504/files/{name}", timeout=300) as response:
+            (emowoz / name).write_bytes(response.read())
+    print("Downloaded shared MELD, DailyDialog and EmoWOZ sources to", ROOT)
 
 
 if __name__ == "__main__":

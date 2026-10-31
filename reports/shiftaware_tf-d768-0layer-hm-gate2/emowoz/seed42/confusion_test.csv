@@ -1,0 +1,8 @@
+,pred_neutral,pred_fearful,pred_dissatisfied,pred_apologetic,pred_abusive,pred_excited,pred_satisfied
+gold_neutral,5562,6,206,25,1,26,188
+gold_fearful,9,6,3,0,0,0,0
+gold_dissatisfied,195,1,383,3,6,1,15
+gold_apologetic,6,0,5,58,0,0,4
+gold_abusive,1,1,11,0,4,0,0
+gold_excited,31,1,3,0,0,43,13
+gold_satisfied,114,2,5,2,0,13,1681

@@ -1,10 +1,39 @@
-data/raw/
-models/*.joblib
-models/b3_*/
-__pycache__/
-*.pyc
+# Local datasets, model artifacts and experiment output
+/data/
+/pilot/data/
+/models/*
+/outputs_quick/
+/cache/
+/checkpoints/
+/wandb/
+*.joblib
+*.npy
+*.pt
+*.pth
+*.safetensors
+# Small demo checkpoints are committed (see README); large models live on Google Drive.
+!/models/b2_*.pt
+
+# Python environments, builds and tool caches
 .venv/
-.pytest_cache/
-.DS_Store
-outputs_quick/
+__pycache__/
+*.py[cod]
 *.egg-info/
+/build/
+/dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ty_cache/
+.coverage
+.coverage.*
+htmlcov/
+.ipynb_checkpoints/
+
+# Local secrets and operating-system files
+.env
+.env.*
+!.env.example
+.DS_Store
+*.swp
+*~

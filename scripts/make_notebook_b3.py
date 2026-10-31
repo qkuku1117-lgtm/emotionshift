@@ -69,7 +69,7 @@ pd.DataFrame({"MELD": meld.groupby("split").size(), "DailyDialog": dd.groupby("s
 code("""t = meld[meld.split == "test"]
 print("MELD test strata:", t.stratum.value_counts().to_dict())
 print("MELD test shift types:", t.shift_type.value_counts().to_dict())
-t[t.dialogue_id == 3][["turn", "speaker", "text", "emotion", "stratum", "shift_type"]]"""),
+t[t.source_dialogue_id == 3][["turn", "speaker", "text", "emotion", "stratum", "shift_type"]]"""),
 
 md(r"""## 2. Method
 

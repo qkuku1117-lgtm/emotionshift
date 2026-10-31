@@ -16,7 +16,7 @@ def meld():
 
 @pytest.fixture(scope="module")
 def dd():
-    return load_dailydialog()
+    return load_dailydialog(splits=("train", "dev", "test", "test_dedup"))
 
 
 def test_meld_split_sizes(meld):
@@ -35,7 +35,12 @@ def test_meld_test_strata_and_types(meld):
     t = meld[meld.split == "test"]
     assert t.stratum.value_counts().to_dict() == {"shift": 1003, "stable": 861, "first": 746}
     assert t.shift_type.value_counts().to_dict() == {
-        "onset": 355, "offset": 340, "surprise": 158, "within_negative": 81, "valence_flip": 69}
+        "onset": 355,
+        "offset": 340,
+        "surprise": 158,
+        "within_negative": 81,
+        "valence_flip": 69,
+    }
 
 
 def test_shift_type_rules():
@@ -54,7 +59,10 @@ def test_labels_in_shared_space(meld, dd):
 
 def test_dailydialog_splits_and_leakage(dd):
     assert dd[dd.split != "test_dedup"].groupby("split").dialogue_id.nunique().to_dict() == {
-        "train": 11118, "dev": 1000, "test": 1000}
+        "train": 11118,
+        "dev": 1000,
+        "test": 1000,
+    }
     leak = dailydialog_leakage()
     assert leak["unique_test_dialogues"] == 996
     assert leak["unique_test_verbatim_in_train"] == 105
@@ -64,6 +72,7 @@ def test_no_overlap_after_dedup(dd):
     def dialogues(split):
         x = dd[dd.split == split].sort_values(["dialogue_id", "turn"])
         return {tuple(g.text) for _, g in x.groupby("dialogue_id")}
+
     dedup = dialogues("test_dedup")
     assert len(dedup) == 891
     assert not dedup & dialogues("train")
@@ -76,7 +85,10 @@ def test_pilot_numbers(meld, dd):
     e = t[t.stratum != "first"]
     assert round((e.stratum == "shift").mean(), 3) == 0.538
     d = dd[dd.split == "test"]
-    assert round(scores(d.emotion, d.prev_emotion.fillna("neutral"))["micro_f1_no_neutral"], 3) == 0.397
+    assert (
+        round(scores(d.emotion, d.prev_emotion.fillna("neutral"))["micro_f1_no_neutral"], 3)
+        == 0.397
+    )
     assert round((d[d.stratum != "first"].stratum == "shift").mean(), 3) == 0.180
 
 
@@ -85,6 +97,7 @@ def test_markov_shift_forecast_pilot(meld):
     # AUROC 0.663, AUPRC 0.673 (chance 0.538); transition prior estimated on train.
     import pandas as pd
     from sklearn.metrics import average_precision_score, roc_auc_score
+
     tr = meld[(meld.split == "train") & (meld.stratum != "first")]
     P = pd.crosstab(tr.prev_emotion, tr.emotion, normalize="index")
     t = meld[(meld.split == "test") & (meld.stratum != "first")]
@@ -104,7 +117,9 @@ def test_metrics_match_sklearn(meld):
     pred = t.prev_emotion.fillna("neutral")
     s = scores(t.emotion, pred)
     assert s["weighted_f1"] == pytest.approx(f1_score(t.emotion, pred, average="weighted"))
-    assert s["macro_f1"] == pytest.approx(f1_score(t.emotion, pred, labels=EMOTIONS, average="macro"))
+    assert s["macro_f1"] == pytest.approx(
+        f1_score(t.emotion, pred, labels=EMOTIONS, average="macro")
+    )
 
 
 def test_shared_stratification_with_absent_shift_types():
@@ -112,8 +127,9 @@ def test_shared_stratification_with_absent_shift_types():
     import pandas as pd
     from emotionshift.eval.metrics import stratified
 
-    frame = pd.DataFrame({"emotion": ["neutral"], "pred": ["neutral"],
-                          "stratum": ["first"], "shift_type": [None]})
+    frame = pd.DataFrame(
+        {"emotion": ["neutral"], "pred": ["neutral"], "stratum": ["first"], "shift_type": [None]}
+    )
     groups = stratified(frame).set_index("group")
     assert groups.loc["stratum:first", "weighted_f1"] == 1.0
     assert groups.loc["stratum:shift", "n"] == 0

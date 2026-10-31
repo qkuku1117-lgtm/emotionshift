@@ -29,7 +29,11 @@ def latency_ms(predict_one_batch, texts, n: int = 500, warmup: int = 20, seed: i
         t0 = time.perf_counter()
         predict_one_batch([t])
         times.append((time.perf_counter() - t0) * 1000)
-    return {"n": len(times), "median_ms": float(np.median(times)), "p95_ms": float(np.percentile(times, 95))}
+    return {
+        "n": len(times),
+        "median_ms": float(np.median(times)),
+        "p95_ms": float(np.percentile(times, 95)),
+    }
 
 
 def throughput(predict_batch, texts) -> dict:
@@ -47,5 +51,9 @@ def file_size_mb(path) -> float:
 
 def machine() -> dict:
     """Where the numbers were measured (they depend on the CPU)."""
-    return {"platform": platform.platform(), "processor": platform.processor() or platform.machine(),
-            "cpu_count": os.cpu_count(), "python": platform.python_version()}
+    return {
+        "platform": platform.platform(),
+        "processor": platform.processor() or platform.machine(),
+        "cpu_count": os.cpu_count(),
+        "python": platform.python_version(),
+    }

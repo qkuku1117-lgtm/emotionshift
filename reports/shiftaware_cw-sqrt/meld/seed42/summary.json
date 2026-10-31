@@ -1,0 +1,70 @@
+{
+ "dataset": "meld",
+ "model": "shiftaware_cw-sqrt",
+ "run_dir": "models/shiftaware/meld_cw-sqrt_seed42",
+ "git": {
+  "commit": "d3389123904ae823d8b9ae781505b3a86d5abd8e",
+  "dirty": true
+ },
+ "seed": 42,
+ "best_epoch": 7,
+ "selected_on_dev": "weighted_f1",
+ "dev": {
+  "weighted_f1": 0.6259612305307539,
+  "macro_f1": 0.5024752512790882,
+  "micro_f1_no_neutral": 0.5333333333333333,
+  "accuracy": 0.6293958521190262,
+  "n": 1109,
+  "weighted_f1_at_training": 0.6275390451665651
+ },
+ "test": {
+  "test": {
+   "weighted_f1": 0.6316146721314004,
+   "macro_f1": 0.4667513194014082,
+   "micro_f1_no_neutral": 0.5,
+   "accuracy": 0.6283524904214559,
+   "ci95": {
+    "weighted_f1": [
+     0.6091035414638505,
+     0.6527537342851418
+    ],
+    "macro_f1": [
+     0.4395956013039658,
+     0.49152934902358275
+    ],
+    "micro_f1_no_neutral": [
+     0.47292672396875857,
+     0.5276187359297421
+    ]
+   },
+   "n": 2610,
+   "shift_head": {
+    "n": 1864,
+    "base_rate": 0.5380901287553648,
+    "shift_f1": 0.7357176033441709,
+    "auroc": 0.7551057628508204,
+    "predicted_shift_rate": 0.6169527896995708
+   },
+   "derived_shift_detection": {
+    "n": 1864,
+    "base_rate": 0.5380901287553648,
+    "shift_f1": 0.7299338999055713,
+    "predicted_shift_rate": 0.598175965665236
+   },
+   "vs_b1_seed0": {
+    "all": {
+     "diff": 0.06380744494770796,
+     "ci_low": 0.04396685167026385,
+     "ci_high": 0.08296721322254738,
+     "n": 2610.0
+    },
+    "shift_turns": {
+     "diff": 0.06511970887724078,
+     "ci_low": 0.03639748138020233,
+     "ci_high": 0.09385694881921514,
+     "n": 1003.0
+    }
+   }
+  }
+ }
+}
