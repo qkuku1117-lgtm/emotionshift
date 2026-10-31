@@ -1,0 +1,65 @@
+{
+ "dataset": "emowoz",
+ "model": "shiftaware_tf-d768-0layer-hm",
+ "run_dir": "models/shiftaware/emowoz_tf-d768-0layer-hm_seed1",
+ "git": {
+  "commit": "e8d5e4afc285b42f4a99e57d76c0639f09c68a7b",
+  "dirty": false
+ },
+ "seed": 1,
+ "best_epoch": 8,
+ "selected_on_dev": "mean(weighted_f1_no_neutral, macro_f1)",
+ "dev": {
+  "weighted_f1": 0.8781467692711127,
+  "macro_f1": 0.6087218251966776,
+  "micro_f1_no_neutral": 0.7890990441326012,
+  "weighted_f1_no_neutral": 0.7689550754276031,
+  "macro_f1_no_neutral": 0.5561386062713134,
+  "accuracy": 0.8851803972264661,
+  "n": 8509,
+  "weighted_f1_no_neutral_at_training": 0.7694810165104331
+ },
+ "test": {
+  "test": {
+   "weighted_f1": 0.8754089820252164,
+   "macro_f1": 0.6233106290805809,
+   "micro_f1_no_neutral": 0.7863383637807784,
+   "weighted_f1_no_neutral": 0.7635659388169544,
+   "macro_f1_no_neutral": 0.5731734971712947,
+   "accuracy": 0.8839471855455178,
+   "ci95": {
+    "weighted_f1": [
+     0.8625820903933091,
+     0.8874512067845076
+    ],
+    "macro_f1": [
+     0.5725841211520343,
+     0.6747476595178374
+    ],
+    "micro_f1_no_neutral": [
+     0.7681702362336646,
+     0.8050389922015597
+    ],
+    "weighted_f1_no_neutral": [
+     0.7418647689451368,
+     0.7851110866502944
+    ]
+   },
+   "n": 8634,
+   "shift_head": {
+    "n": 7534,
+    "base_rate": 0.3517387841783913,
+    "shift_f1": 0.6395774075579033,
+    "auroc": 0.7844720535286573,
+    "predicted_shift_rate": 0.30156623307671887
+   },
+   "derived_shift_detection": {
+    "n": 7534,
+    "base_rate": 0.3517387841783913,
+    "shift_f1": 0.7606060606060606,
+    "predicted_shift_rate": 0.3490841518449695
+   },
+   "vs_b1_seed0": null
+  }
+ }
+}
