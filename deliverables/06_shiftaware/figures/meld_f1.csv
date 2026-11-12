@@ -1,0 +1,4 @@
+model,weighted_f1_mean,weighted_f1_sd,macro_f1_mean,macro_f1_sd
+Utterance RoBERTa,62.8455,0.3137,40.5642,0.8015
+Context RoBERTa,63.8213,0.2991,41.0876,0.2261
+ShiftAware,62.5210,0.5675,46.3291,0.8049

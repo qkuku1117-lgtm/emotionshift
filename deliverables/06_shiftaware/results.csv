@@ -1,0 +1,7 @@
+dataset,model,seeds,weighted_f1_mean,weighted_f1_sd,weighted_f1_ci_low,weighted_f1_ci_high,macro_f1_mean,macro_f1_sd,macro_f1_ci_low,macro_f1_ci_high,micro_f1_no_neutral_mean,micro_f1_no_neutral_sd,micro_f1_no_neutral_ci_low,micro_f1_no_neutral_ci_high
+meld,Utterance RoBERTa,5,62.8455,0.3137,60.6244,65.0580,40.5642,0.8015,38.7594,42.2839,49.8781,0.6142,47.0259,52.4518
+meld,Context RoBERTa,5,63.8213,0.2991,61.5654,65.9368,41.0876,0.2261,39.4515,42.5685,51.7993,0.4619,49.1143,54.3645
+meld,ShiftAware,5,62.5210,0.5675,60.3519,64.5796,46.3291,0.8049,44.0196,48.5899,49.6399,0.8118,47.0573,52.3830
+dailydialog,Utterance RoBERTa,5,84.8038,0.0342,83.6162,86.0087,39.6887,1.0917,36.2331,43.0709,55.3371,0.3907,52.3265,57.9476
+dailydialog,Context RoBERTa,5,85.6289,0.1692,84.3643,86.8074,47.4486,1.9905,41.7623,51.3702,59.6093,0.3429,56.7428,62.2423
+dailydialog,ShiftAware,5,85.4155,0.3588,84.1922,86.5805,45.0877,5.3370,41.2677,48.1762,57.3879,0.7073,54.7333,60.0344
