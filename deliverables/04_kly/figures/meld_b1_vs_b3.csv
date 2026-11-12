@@ -1,0 +1,10 @@
+group,n,b1,b3
+all,2610,56.78,62.85
+stratum:first,746,62.17,65.18
+stratum:stable,861,62.12,69.73
+stratum:shift,1003,49.15,55.91
+shift_type:onset,355,46.34,50.25
+shift_type:offset,340,85.91,91.81
+shift_type:surprise,158,51.58,60.84
+shift_type:within_negative,81,32.14,31.78
+shift_type:valence_flip,69,45.42,57.77
