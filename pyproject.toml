@@ -20,6 +20,8 @@ train = ["torch>=2.6", "transformers>=4.45,<6"]
 transformers = ["torch>=2.1", "transformers>=4.41", "accelerate>=0.26"]
 # B2 BiGRU / BiLSTM: uv sync --extra rnn
 rnn = ["torch>=2.4", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29"]
+# Streamlit demo: pip install -e ".[demo]", then streamlit run app/app.py
+demo = ["streamlit>=1.40"]
 
 [dependency-groups]
 dev = [
