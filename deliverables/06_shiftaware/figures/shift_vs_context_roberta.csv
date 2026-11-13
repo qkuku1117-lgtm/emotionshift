@@ -1,0 +1,9 @@
+dataset,group,metric,n,diff,ci_low,ci_high,p
+meld,all,weighted_f1,2610.0000,-1.3003,-2.5115,-0.1212,0.0392
+meld,stable,weighted_f1,861.0000,-2.6793,-4.6156,-0.5944,0.0080
+meld,shift,weighted_f1,1003.0000,-0.3585,-2.4442,1.7150,0.7411
+meld,all,macro_f1,2610.0000,5.2415,3.2612,7.2913,0.0010
+dailydialog,all,micro_f1_no_neutral,7019.0000,-2.2214,-3.6717,-0.6881,0.0046
+dailydialog,stable,micro_f1_no_neutral,4295.0000,-0.2353,-2.6661,2.1676,0.8610
+dailydialog,shift,micro_f1_no_neutral,942.0000,-4.7219,-6.6988,-2.8094,0.0002
+dailydialog,all,macro_f1,7019.0000,-2.3609,-5.3600,2.0443,0.3003
