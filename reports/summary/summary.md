@@ -64,11 +64,11 @@ Native seven labels, 8,634 labelled user turns. Workstreams 4 and 5 have not bee
 | 2 | TF-IDF + SVM | 5 | 76.50 ± 0.00 [74.59, 78.35] | 47.10 ± 0.00 |
 | 3 | BiGRU | 5 | 77.05 ± 0.51 [75.49, 78.72] | 48.24 ± 1.47 |
 | 3 | BiLSTM | 5 | 77.01 ± 0.21 [75.30, 78.69] | 48.73 ± 1.85 |
-| 4 | RoBERTa-base, utterance only | 0 | [TBD] | [TBD] |
-| 5 | RoBERTa-base with context | 0 | [TBD] | [TBD] |
-| 6 | ShiftAware | 3 | 82.05 ± 0.32 [80.70, 83.35] | 57.07 ± 2.13 |
-| 1 | Inertia (gold history, reference) | 1 | 32.60 [30.21, 34.93] | 17.09 |
-| 1 | Markov (gold history, reference) | 1 | 11.25 [8.60, 14.04] | 8.13 |
+| 4 | RoBERTa-base, utterance only | 5 | 78.09 ± 0.32 [76.21, 79.90] | 50.00 ± 1.26 |
+| 5 | RoBERTa-base with context | 5 | 84.62 ± 0.27 [83.34, 85.73] | 55.72 ± 0.62 |
+| 6 | ShiftAware | 3 | 82.05 ± 0.32 [80.69, 83.38] | 57.07 ± 2.13 |
+| 1 | Inertia (gold history, reference) | 1 | 32.60 [30.26, 35.00] | 17.09 |
+| 1 | Markov (gold history, reference) | 1 | 11.25 [8.65, 14.06] | 8.13 |
 
 ## E2 strata (headline metric)
 
@@ -115,8 +115,8 @@ Native seven labels, 8,634 labelled user turns. Workstreams 4 and 5 have not bee
 | TF-IDF + SVM | 76.50 ± 0.00 | 48.97 ± 0.00 | 67.38 ± 0.00 | 81.93 ± 0.00 | 85.47 ± 0.00 | 0.00 ± 0.00 | 21.05 ± 0.00 | 79.33 ± 0.00 | 77.37 ± 0.00 |
 | BiGRU | 77.05 ± 0.51 | 44.83 ± 2.76 | 68.72 ± 0.88 | 82.83 ± 0.66 | 86.70 ± 0.48 | 0.00 ± 0.00 | 40.49 ± 12.28 | 84.72 ± 0.47 | 79.03 ± 4.72 |
 | BiLSTM | 77.01 ± 0.21 | 44.55 ± 4.07 | 68.13 ± 0.56 | 83.01 ± 0.32 | 86.65 ± 0.31 | 0.00 ± 0.00 | 42.05 ± 7.39 | 84.80 ± 1.38 | 78.21 ± 4.70 |
-| RoBERTa-base, utterance only | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] |
-| RoBERTa-base with context | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] |
+| RoBERTa-base, utterance only | 78.09 ± 0.32 | 57.75 ± 1.90 | 69.17 ± 1.27 | 82.75 ± 0.50 | 85.57 ± 0.75 | 0.00 ± 0.00 | 23.78 ± 1.32 | 82.20 ± 2.30 | 73.43 ± 4.40 |
+| RoBERTa-base with context | 84.62 ± 0.27 | 61.48 ± 1.48 | 80.50 ± 0.47 | 87.19 ± 0.44 | 90.37 ± 0.73 | 0.00 ± 0.00 | 32.09 ± 2.60 | 81.06 ± 0.98 | 74.01 ± 2.48 |
 | ShiftAware | 82.05 ± 0.32 | 51.19 ± 2.81 | 76.76 ± 0.91 | 85.33 ± 0.34 | 88.54 ± 0.75 | 0.00 ± 0.00 | 40.73 ± 6.27 | 79.68 ± 1.66 | 75.31 ± 0.00 |
 | Inertia (gold history, reference) | 32.60 | 0.00 | 100.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
 | Markov (gold history, reference) | 11.25 | 0.00 | 40.49 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
@@ -185,34 +185,34 @@ Native seven labels, 8,634 labelled user turns. Workstreams 4 and 5 have not bee
 | dailydialog | Emotional inertia (predicted history) | TF-IDF + SVM | stable | micro_f1_no_neutral | -4.17 [-8.05, -0.57], p = 0.021 |  |
 | dailydialog | Emotional inertia (predicted history) | TF-IDF + SVM | shift | micro_f1_no_neutral | +61.26 [+56.26, +65.93], p < 0.001 |  |
 | dailydialog | Emotional inertia (predicted history) | TF-IDF + SVM | all | macro_f1 | +17.12 [+13.94, +20.93], p < 0.001 |  |
-| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | all | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | stable | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | shift | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | all | macro_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base with context | ShiftAware | all | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base with context | ShiftAware | stable | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base with context | ShiftAware | shift | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base with context | ShiftAware | all | macro_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | ShiftAware | all | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | ShiftAware | stable | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | ShiftAware | shift | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | RoBERTa-base, utterance only | ShiftAware | all | macro_f1_no_neutral | [TBD] |  |
-| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | all | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | stable | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | shift | weighted_f1_no_neutral | [TBD] |  |
-| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | all | macro_f1_no_neutral | [TBD] |  |
-| emowoz | TF-IDF + SVM | BiGRU | all | weighted_f1_no_neutral | +0.56 [-0.35, +1.51], p = 0.251 |  |
-| emowoz | TF-IDF + SVM | BiGRU | stable | weighted_f1_no_neutral | +1.34 [-0.78, +3.77], p = 0.250 |  |
-| emowoz | TF-IDF + SVM | BiGRU | shift | weighted_f1_no_neutral | +0.90 [-0.07, +1.85], p = 0.074 |  |
-| emowoz | TF-IDF + SVM | BiGRU | all | macro_f1_no_neutral | +1.14 [-3.38, +5.29], p = 0.634 |  |
-| emowoz | TF-IDF + SVM | BiLSTM | all | weighted_f1_no_neutral | +0.51 [-0.31, +1.36], p = 0.241 |  |
-| emowoz | TF-IDF + SVM | BiLSTM | stable | weighted_f1_no_neutral | +0.75 [-0.94, +2.65], p = 0.430 |  |
-| emowoz | TF-IDF + SVM | BiLSTM | shift | weighted_f1_no_neutral | +1.07 [+0.02, +2.04], p = 0.035 |  |
-| emowoz | TF-IDF + SVM | BiLSTM | all | macro_f1_no_neutral | +1.63 [-3.06, +5.80], p = 0.468 |  |
-| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | all | weighted_f1_no_neutral | +47.26 [+44.60, +50.04], p < 0.001 |  |
-| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | stable | weighted_f1_no_neutral | +1.49 [-1.14, +4.42], p = 0.302 |  |
-| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | shift | weighted_f1_no_neutral | +72.24 [+69.29, +75.18], p < 0.001 |  |
-| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | all | macro_f1_no_neutral | +34.18 [+29.45, +38.95], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | all | weighted_f1_no_neutral | +6.53 [+5.13, +8.17], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | stable | weighted_f1_no_neutral | +11.33 [+8.01, +14.82], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | shift | weighted_f1_no_neutral | +4.44 [+3.26, +5.78], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | RoBERTa-base with context | all | macro_f1_no_neutral | +5.72 [+4.37, +7.13], p < 0.001 |  |
+| emowoz | RoBERTa-base with context | ShiftAware | all | weighted_f1_no_neutral | -2.61 [-3.52, -1.69], p < 0.001 |  |
+| emowoz | RoBERTa-base with context | ShiftAware | stable | weighted_f1_no_neutral | -3.64 [-5.81, -1.53], p = 0.002 |  |
+| emowoz | RoBERTa-base with context | ShiftAware | shift | weighted_f1_no_neutral | -2.03 [-2.96, -1.09], p < 0.001 |  |
+| emowoz | RoBERTa-base with context | ShiftAware | all | macro_f1_no_neutral | +1.48 [-2.47, +5.22], p = 0.621 |  |
+| emowoz | RoBERTa-base, utterance only | ShiftAware | all | weighted_f1_no_neutral | +3.77 [+2.65, +4.99], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | ShiftAware | stable | weighted_f1_no_neutral | +6.87 [+4.24, +9.60], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | ShiftAware | shift | weighted_f1_no_neutral | +2.68 [+1.58, +3.75], p < 0.001 |  |
+| emowoz | RoBERTa-base, utterance only | ShiftAware | all | macro_f1_no_neutral | +7.52 [+3.52, +11.24], p = 0.003 |  |
+| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | all | weighted_f1_no_neutral | +1.59 [+0.51, +2.67], p = 0.006 |  |
+| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | stable | weighted_f1_no_neutral | +1.79 [-0.65, +4.36], p = 0.164 |  |
+| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | shift | weighted_f1_no_neutral | +0.82 [-0.41, +1.95], p = 0.167 |  |
+| emowoz | TF-IDF + SVM | RoBERTa-base, utterance only | all | macro_f1_no_neutral | +2.90 [-0.80, +6.63], p = 0.203 |  |
+| emowoz | TF-IDF + SVM | BiGRU | all | weighted_f1_no_neutral | +0.56 [-0.36, +1.53], p = 0.252 |  |
+| emowoz | TF-IDF + SVM | BiGRU | stable | weighted_f1_no_neutral | +1.34 [-0.83, +3.70], p = 0.257 |  |
+| emowoz | TF-IDF + SVM | BiGRU | shift | weighted_f1_no_neutral | +0.90 [-0.13, +1.94], p = 0.074 |  |
+| emowoz | TF-IDF + SVM | BiGRU | all | macro_f1_no_neutral | +1.14 [-3.35, +5.25], p = 0.637 |  |
+| emowoz | TF-IDF + SVM | BiLSTM | all | weighted_f1_no_neutral | +0.51 [-0.27, +1.37], p = 0.245 |  |
+| emowoz | TF-IDF + SVM | BiLSTM | stable | weighted_f1_no_neutral | +0.75 [-1.05, +2.68], p = 0.436 |  |
+| emowoz | TF-IDF + SVM | BiLSTM | shift | weighted_f1_no_neutral | +1.07 [+0.11, +2.06], p = 0.037 |  |
+| emowoz | TF-IDF + SVM | BiLSTM | all | macro_f1_no_neutral | +1.63 [-2.58, +5.62], p = 0.469 |  |
+| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | all | weighted_f1_no_neutral | +47.26 [+44.47, +50.07], p < 0.001 |  |
+| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | stable | weighted_f1_no_neutral | +1.49 [-1.27, +4.26], p = 0.305 |  |
+| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | shift | weighted_f1_no_neutral | +72.24 [+69.34, +75.16], p < 0.001 |  |
+| emowoz | Emotional inertia (predicted history) | TF-IDF + SVM | all | macro_f1_no_neutral | +34.18 [+29.64, +38.64], p < 0.001 |  |
 
 ## E9 efficiency
 
@@ -238,6 +238,6 @@ Each model was measured on its owner's machine (see `machine`), so compare withi
 | emowoz | b1 | 323,638 | 3.55 |  | 1.95 / 2.23 | Windows-11-10.0.26200-SP0 |  |
 | emowoz | b2_bigru | 206,983 | 0.88 |  | 1.79 / 2.84 | Windows-11-10.0.26200-SP0 |  |
 | emowoz | b2_bilstm | 223,623 | 0.95 |  | 3.10 / 6.14 | Windows-11-10.0.26200-SP0 |  |
-| emowoz | b3 |  |  |  |  |  | [TBD] |
-| emowoz | b4 |  |  |  |  |  | [TBD] |
+| emowoz | b3 | 124,651,015 |  |  | 20.86 / 33.75 | Windows-11-10.0.26200-SP0 |  |
+| emowoz | b4 | 124,651,015 |  |  | 79.03 / 118.21 | Windows-11-10.0.26200-SP0 |  |
 | emowoz | shiftaware | 127,217,569 | 508.96 |  | 50.12 / 133.65 | macOS-27.0.1-arm64-arm-64bit | untrained weights, same architecture; one new turn incl. re-encoding its prefix |

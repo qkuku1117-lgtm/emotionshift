@@ -252,8 +252,8 @@ comparable with MELD or DailyDialog. The numbers are generated in
 | 1 | Inertia / Markov baselines | done (Ruizhi), [`reports/b0/emowoz`](reports/b0/emowoz) | 5 | 29.24 (inertia, predicted history) |
 | 2 | TF-IDF + SVM | done (13ray), [`docs/EMOWOZ_B1_B2.md`](docs/EMOWOZ_B1_B2.md) | 5 | 76.50 |
 | 3 | BiGRU / BiLSTM | done (13ray), same doc | 5 | 77.05 / 77.01 |
-| 4 | RoBERTa-base, utterance only | not run | 0 | [TBD] |
-| 5 | RoBERTa-base with context | not run | 0 | [TBD] |
+| 4 | RoBERTa-base, utterance only | done (13ray), [`docs/EMOWOZ_B3.md`](docs/EMOWOZ_B3.md) | 5 | 78.09 |
+| 5 | RoBERTa-base with context | done (13ray), [`docs/EMOWOZ_B4.md`](docs/EMOWOZ_B4.md) | 5 | 84.62 |
 | 6 | ShiftAware | exploratory (Fpengz), variant `shiftaware_tf-d768-2layer-hm` | 3 | 82.05 |
 
 ## Development checks
