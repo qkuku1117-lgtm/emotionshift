@@ -3,7 +3,7 @@
 Status: five seeds, official test evaluation, E4 controls and artifact audits completed. Mean non-neutral weighted-F1: 84.62% (population SD 0.25 points).
 
 This extension reuses the original B4 implementation and credits its original
-author. 13ray contributes native EmoWOZ integration, experiments and audits.
+author. HE RUIZHI contributes native EmoWOZ integration, experiments and audits.
 Original MELD/DailyDialog reports and experiment settings remain unchanged.
 
 ## Predeclared protocol

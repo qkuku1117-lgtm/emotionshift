@@ -5,20 +5,17 @@ We test where conversational context helps or hurts at the moments a speaker's
 emotion changes, on MELD and DailyDialog, with EmoWOZ as an extension beyond the
 proposal.
 
-**Team members: read the hand-in standards first —
-[`docs/TEAM_GUIDE.pdf`](docs/TEAM_GUIDE.pdf) (2 pages) or [`docs/TEAM_GUIDE.md`](docs/TEAM_GUIDE.md).**
-
 ## Workstreams
 
 | # | Model | Owner | Status |
 |---|---|---|---|
-| 1 | Majority / emotional-inertia / Markov baseline | Ruizhi | ✅ done, merged 2 Nov: [`docs/B0_BASELINES.md`](docs/B0_BASELINES.md), [`results`](reports/b0/results.md) |
-| 2 | TF-IDF + linear SVM | Lixian | ✅ done: [`docs/B1_TFIDF_SVM.md`](docs/B1_TFIDF_SVM.md) |
-| 3 | BiGRU / BiLSTM | Thanh | ✅ done, merged 30 Oct: [`docs/B2_BIGRU_BILSTM.md`](docs/B2_BIGRU_BILSTM.md) |
-| 4 | Transformer, utterance only (RoBERTa-base) | KL Y | ✅ done, merged 30 Oct: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md); trained models on Google Drive |
-| 5 | Context-aware RoBERTa | Anqi | ✅ done, merged 10 Nov: [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md) |
-| 6 | ShiftAware (speaker / shift-aware) | Fpengz | ✅ done, merged 1 Nov: [`results`](reports/shiftaware/results.md), [`selection`](reports/shiftaware/selection.md), [`notebook`](notebooks/shiftaware.ipynb); predictions include a `shift_prob` column |
-| — | Demo app, slides and video integration | Lixian | demo app: [`app/app.py`](app/app.py) (`uv sync --extra demo`, then `uv run streamlit run app/app.py`); slides and video are submitted separately |
+| 1 | Majority / emotional-inertia / Markov baseline | HE RUIZHI | ✅ done, merged 2 Nov: [`docs/B0_BASELINES.md`](docs/B0_BASELINES.md), [`results`](reports/b0/results.md) |
+| 2 | TF-IDF + linear SVM | QIN LIXIAN | ✅ done: [`docs/B1_TFIDF_SVM.md`](docs/B1_TFIDF_SVM.md) |
+| 3 | BiGRU / BiLSTM | DANG NGUYEN TUAN THANH | ✅ done, merged 30 Oct: [`docs/B2_BIGRU_BILSTM.md`](docs/B2_BIGRU_BILSTM.md) |
+| 4 | Transformer, utterance only (RoBERTa-base) | YE KUNLIN | ✅ done, merged 30 Oct: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md); trained models on Google Drive |
+| 5 | Context-aware RoBERTa | HU ANQI | ✅ done, merged 10 Nov: [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md) |
+| 6 | ShiftAware (speaker / shift-aware) | WANG ZHOUFU | ✅ done, merged 1 Nov: [`results`](reports/shiftaware/results.md), [`selection`](reports/shiftaware/selection.md), [`notebook`](notebooks/shiftaware.ipynb); predictions include a `shift_prob` column |
+| — | Demo app, slides and video integration | QIN LIXIAN | demo app: [`app/app.py`](app/app.py) (`uv sync --extra demo`, then `uv run streamlit run app/app.py`); slides and video are submitted separately |
 
 Group results for all six workstreams (main table, shift strata, efficiency and paired
 tests) are in [`reports/summary/summary.md`](reports/summary/summary.md), generated from
@@ -141,7 +138,7 @@ deliverables/            temporary collection folders for the video (removed bef
 
 ## EmoWOZ shared-label view
 
-**Contributor: Rachel ([13ray](https://github.com/13ray)).**
+**Contributor: HE RUIZHI.**
 Details: **[EmoWOZ integration, label mapping and run instructions](docs/EMOWOZ.md)**.
 
 `load("emowoz")` keeps EmoWOZ's native labels. `load_emowoz_shared()` returns user
@@ -189,11 +186,7 @@ instance IDs, trigger labels, raw text, and the same text cleanup.
 `pilot/`, their reports, and the proposal snapshot in `docs/proposal.md` are retained.
 Open notebooks with `uv run jupyter notebook`.
 
-The exploration notebooks and their reports have been rerun using these rules.
-The pilot script also uses the unified loader; `pilot/pilot_output.txt` is retained
-as a historical record of the original proposal run.
-Saved B1 prediction CSVs retain their predictions and scores; their dialogue IDs
-and source metadata have been migrated to the unified schema.
+`pilot/pilot_output.txt` is the record of the original proposal run.
 
 ## PyTorch training
 
@@ -215,34 +208,7 @@ uv sync --extra train
 uv run --extra train pytest
 ```
 
-## Native EmoWOZ SVM and recurrent baselines
-
-The workstream 2/3 extension trains TF-IDF/SVM, BiGRU and BiLSTM on the
-native EmoWOZ labels using official splits and five seeds. See the
-[protocol and reproduction guide](docs/EMOWOZ_B1_B2.md),
-[audited results](reports/emowoz_baselines/results.md) and
-[executed notebook](notebooks/emowoz_b1_b2.ipynb).
-The original model authors retain credit; 13ray contributes this dataset
-extension. Existing MELD/DailyDialog results are preserved.
-
-## Native EmoWOZ single-utterance RoBERTa
-
-Workstream 4 now has five-seed native-label EmoWOZ results alongside the
-SVM and recurrent baselines. See the [protocol](docs/EMOWOZ_B3.md),
-[results](reports/b3/emowoz/results.md) and
-[executed notebook](notebooks/emowoz_b3.ipynb).
-The original B3 implementation retains its attribution; 13ray contributes
-this dataset extension. Large checkpoints remain outside Git.
-
-## Native EmoWOZ context RoBERTa
-
-Workstream 5 uses past user/system history, native user labels and the original
-MELD-dev-selected window. See the [protocol](docs/EMOWOZ_B4.md),
-[results and paired comparisons](reports/b4/emowoz/results.md) and
-[executed notebook](notebooks/emowoz_b4.ipynb). Original B4 authors retain
-credit; 13ray contributes this dataset extension. Large weights remain outside Git.
-
-## EmoWOZ status by workstream
+## EmoWOZ extension (native labels)
 
 EmoWOZ is an extension beyond the proposal's core datasets. All rows use the native
 seven labels and the same 8,634 labelled user turns of the official test split;
@@ -251,14 +217,19 @@ comparable with MELD or DailyDialog. The numbers are generated in
 [`reports/summary/summary.md`](reports/summary/summary.md) by
 `uv run scripts/summarize_all.py`.
 
-| # | Model | EmoWOZ | Seeds | Headline |
-|---|---|---|---|---|
-| 1 | Inertia / Markov baselines | done (Ruizhi), [`reports/b0/emowoz`](reports/b0/emowoz) | 5 | 29.24 (inertia, predicted history) |
-| 2 | TF-IDF + SVM | done (13ray), [`docs/EMOWOZ_B1_B2.md`](docs/EMOWOZ_B1_B2.md) | 5 | 76.50 |
-| 3 | BiGRU / BiLSTM | done (13ray), same doc | 5 | 77.05 / 77.01 |
-| 4 | RoBERTa-base, utterance only | done (13ray), [`docs/EMOWOZ_B3.md`](docs/EMOWOZ_B3.md) | 5 | 78.09 |
-| 5 | RoBERTa-base with context | done (13ray), [`docs/EMOWOZ_B4.md`](docs/EMOWOZ_B4.md) | 5 | 84.62 |
-| 6 | ShiftAware | exploratory (Fpengz), variant `shiftaware_tf-d768-2layer-hm` | 3 | 82.05 |
+| # | Model | EmoWOZ run by | Protocol and results | Seeds | Headline |
+|---|---|---|---|---|---|
+| 1 | Inertia / Markov baselines | HE RUIZHI | [`reports/b0/emowoz`](reports/b0/emowoz) | 5 | 29.24 (inertia, predicted history) |
+| 2 | TF-IDF + SVM | HE RUIZHI | [`docs/EMOWOZ_B1_B2.md`](docs/EMOWOZ_B1_B2.md), [`results`](reports/emowoz_baselines/results.md), [`notebook`](notebooks/emowoz_b1_b2.ipynb) | 5 | 76.50 |
+| 3 | BiGRU / BiLSTM | HE RUIZHI | same as #2 | 5 | 77.05 / 77.01 |
+| 4 | RoBERTa-base, utterance only | HE RUIZHI | [`docs/EMOWOZ_B3.md`](docs/EMOWOZ_B3.md), [`results`](reports/b3/emowoz/results.md), [`notebook`](notebooks/emowoz_b3.ipynb) | 5 | 78.09 |
+| 5 | RoBERTa-base with context | HE RUIZHI | [`docs/EMOWOZ_B4.md`](docs/EMOWOZ_B4.md), [`results and paired comparisons`](reports/b4/emowoz/results.md), [`notebook`](notebooks/emowoz_b4.ipynb) | 5 | 84.62 |
+| 6 | ShiftAware | WANG ZHOUFU (exploratory) | variant `shiftaware_tf-d768-2layer-hm` | 3 | 82.05 |
+
+Models 2 to 5 reuse the original MELD/DailyDialog implementations, whose authors
+keep credit for them; the EmoWOZ runs are a dataset extension. Model 5 uses past
+user/system history, native user labels and the window selected on MELD dev.
+Existing MELD/DailyDialog results are unchanged. Large checkpoints stay outside Git.
 
 ## Development checks
 
@@ -291,6 +262,5 @@ second copy of its content. Local caches and smoke-test output are ignored by Gi
 The capstone requires a declaration of how AI tools were used, and code
 "generated purely by AI tools" is penalized. The original pilot scripts, data and
 evaluation modules, tests and exploration notebooks were written with AI
-assistance. This merge and its compatibility changes were also AI-assisted;
-record AI use in the declaration and make sure the team understands and owns
-the code.
+assistance. Each member declares their own use of AI tools in the course's AI
+disclosure form.

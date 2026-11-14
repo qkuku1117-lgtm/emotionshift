@@ -6,7 +6,7 @@ and notebooks/emowoz_b3.ipynb. The headline non-neutral weighted-F1 is 78.09%
 (five-seed mean); population SD is 0.29 percentage points.
 
 Reuse the original B3 RoBERTa-base implementation, retaining its original author
-credit. 13ray adds the native EmoWOZ label handling and experiment runner.
+credit. HE RUIZHI adds the native EmoWOZ label handling and experiment runner.
 No MELD/DailyDialog experiments, shared loaders or shift definitions are changed.
 
 Official labelled user targets: 66,474 train / 8,509 dev / 8,634 test.
