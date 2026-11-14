@@ -2,7 +2,8 @@
 
 Recognizing, anticipating and explaining emotional turning points in conversation.
 We test where conversational context helps or hurts at the moments a speaker's
-emotion changes, on MELD and DailyDialog.
+emotion changes, on MELD and DailyDialog, with EmoWOZ as an extension beyond the
+proposal.
 
 **Team members: read the hand-in standards first —
 [`docs/TEAM_GUIDE.pdf`](docs/TEAM_GUIDE.pdf) (2 pages) or [`docs/TEAM_GUIDE.md`](docs/TEAM_GUIDE.md).**
@@ -16,8 +17,12 @@ emotion changes, on MELD and DailyDialog.
 | 3 | BiGRU / BiLSTM | Thanh | ✅ done, merged 30 Oct: [`docs/B2_BIGRU_BILSTM.md`](docs/B2_BIGRU_BILSTM.md) |
 | 4 | Transformer, utterance only (RoBERTa-base) | KL Y | ✅ done, merged 30 Oct: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md); trained models on Google Drive |
 | 5 | Context-aware RoBERTa | Anqi | ✅ done, merged 10 Nov: [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md) |
-| 6 | ShiftAware (speaker / shift-aware) | Fpengz | ✅ done, merged 1 Nov: [`results`](reports/shiftaware/results.md), [`selection`](reports/shiftaware/selection.md); notebook and α column still to add |
-| — | Demo, slides and video integration | Lixian | in progress |
+| 6 | ShiftAware (speaker / shift-aware) | Fpengz | ✅ done, merged 1 Nov: [`results`](reports/shiftaware/results.md), [`selection`](reports/shiftaware/selection.md), [`notebook`](notebooks/shiftaware.ipynb); predictions include a `shift_prob` column |
+| — | Demo app, slides and video integration | Lixian | demo app: [`app/app.py`](app/app.py) (`uv sync --extra demo`, then `uv run streamlit run app/app.py`); slides and video are submitted separately |
+
+Group results for all six workstreams (main table, shift strata, efficiency and paired
+tests) are in [`reports/summary/summary.md`](reports/summary/summary.md), generated from
+the prediction CSVs by `uv run scripts/summarize_all.py`.
 
 Shared pieces already in the repo, for everyone to reuse: data pipeline, shift
 labels, metrics, efficiency helpers, prediction format, tests.
@@ -111,20 +116,22 @@ E.latency_ms(model.predict, texts)  # E9: per-utterance CPU latency (median, p95
 ## Repository layout
 
 ```
-emotionshift/data/       loaders.py (one Dialogue/Turn table), labels.py, shifts.py
-emotionshift/models/     tfidf.py (#2), birnn.py (#3), roberta.py (#4), shiftaware/  · add your model here
+emotionshift/data/       loaders.py (one Dialogue/Turn table), labels.py, shifts.py, torch_data.py;
+                         datasets.py keeps compatibility imports only
+emotionshift/models/     b0.py (#1), tfidf.py (#2), birnn.py (#3), roberta.py (#4),
+                         roberta_context.py (#5), shiftaware/ (#6)
 emotionshift/eval/       metrics.py, efficiency.py, plots.py
-configs/                 one YAML per experiment (b1_tfidf.yaml, b2_birnn.yaml, b3_roberta.yaml,
-                         shiftaware.yaml, shiftaware_train.yaml)
-scripts/                 fetch_data.sh (fetch_data.py: same, cross-platform), train_b1.py, train_b2.py,
-                         make_b2_artifacts.py, verify_b2.py, train_b3.py, analyse_b3.py,
-                         make_notebook_b3.py, train_shiftaware.py, evaluate_shiftaware.py,
-                         summarize_shiftaware.py, diagnose_shiftaware.py, smoke_shiftaware.py
-notebooks/               original exploration notebooks and executed walkthroughs
-                         (b1_tfidf_svm.ipynb, b2_bigru_bilstm.ipynb, b3_roberta.ipynb)
-tests/                   original tests, model tests (B1, B2, B3, ShiftAware) and merge compatibility checks
-reports/                 results tables and figures per model (reports/b1/, reports/b2/, reports/b3/,
-                         reports/shiftaware*/)
+app/                     app.py: Streamlit demo; reads the prediction CSVs only
+configs/                 one YAML per experiment (b0 to b4, shiftaware, and the EmoWOZ runs)
+scripts/                 fetch_data.sh (fetch_data.py: same, cross-platform); training, analysis and
+                         artifact scripts per model; verify_b0.py, verify_b2.py;
+                         summarize_all.py builds reports/summary/ from the prediction CSVs
+notebooks/               exploration notebooks (01, 02) and one notebook per model
+                         (b0 to b3, b4_colab, shiftaware, emowoz_b1_b2, emowoz_b3, emowoz_b4)
+tests/                   data rules, metrics, each model's interface, EmoWOZ, the summary script
+                         and merge compatibility checks
+reports/                 results tables and figures per model (b0 to b4, shiftaware*, emowoz*),
+                         and summary/ for the group tables
 predictions/             shared-format prediction CSVs
 models/                  small demo checkpoints only (b2_*.pt); large models live on Google Drive
 docs/                    proposal snapshot, team guide, per-model write-ups
@@ -181,9 +188,6 @@ instance IDs, trigger labels, raw text, and the same text cleanup.
 `notebooks/01_data_exploration.ipynb`, `notebooks/02_quick_baselines.ipynb`,
 `pilot/`, their reports, and the proposal snapshot in `docs/proposal.md` are retained.
 Open notebooks with `uv run jupyter notebook`.
-The working proposal is the shared
-[EmotionShift Project Proposal](https://claude.ai/artifact/JbtymfhtEeBZyuho7A4Eka);
-the local snapshot may lag behind it.
 
 The exploration notebooks and their reports have been rerun using these rules.
 The pilot script also uses the unified loader; `pilot/pilot_output.txt` is retained
