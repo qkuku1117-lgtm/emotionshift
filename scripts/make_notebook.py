@@ -10,7 +10,7 @@ md, code = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
 cells = [
 md("""# B1 · TF-IDF + linear SVM baseline
 
-**EE6405 group project · EmotionShift · workstream #2 (Lixian)**
+**EE6405 group project · EmotionShift · workstream #2 (QIN LIXIAN)**
 
 This notebook walks through the traditional-ML baseline step by step:
 

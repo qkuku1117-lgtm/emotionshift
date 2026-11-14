@@ -1,4 +1,4 @@
-# B2: BiGRU / BiLSTM (Thanh)
+# B2: BiGRU / BiLSTM (DANG NGUYEN TUAN THANH)
 
 This workstream compares two **utterance-only** recurrent baselines. Both read
 the words of the current utterance in both directions. Neither receives other
@@ -149,16 +149,10 @@ See `deliverables/03_thanh/refs.txt` for APA references. Implementation and
 preparation used AI assistance. Review and understand the code, disclose this
 complete unedited chat as the guide requires, and complete the personal forms.
 
-## Validation and GitHub hand-in
+## Validation
 
 The full test suite passed all 19 checks. The smoke run completed on both datasets.
 The artifact audit (`python scripts/verify_b2.py`) checks all 30 prediction CSVs
 against the shared loader and recomputes their stored metrics, checks checkpoint
 sizes, figure resolution and source CSVs, and validates notebook execution.
 Its result is `reports/b2/verification.json`.
-
-To contribute, fork the upstream repository, add the new/modified files from the
-submission bundle to your fork, review the diff, and open a pull request for
-Lixian. Use `docs/B2_PR_DESCRIPTION.md` as the PR description. Keep `data/raw/`,
-`.venv/`, caches and `outputs_quick/` out of Git. The bundle includes the small
-saved `.pt` files required for the demo. Slides and video are prepared separately.

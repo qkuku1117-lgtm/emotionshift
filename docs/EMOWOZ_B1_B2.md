@@ -3,7 +3,7 @@
 This contribution extends the team's existing utterance-only TF-IDF/SVM,
 BiGRU and BiLSTM implementations to EmoWOZ. Original model authors and the
 MELD/DailyDialog experiments retain their attribution and results. The extension
-is implemented by 13ray, using AI assistance to be disclosed per the team guide.
+is implemented by HE RUIZHI, using AI assistance to be disclosed per the team guide.
 
 ## Data and selection
 

@@ -42,41 +42,6 @@ def finalize():
         flags=re.MULTILINE,
     )
     note.write_text(text, encoding="utf-8")
-    readme = ROOT / "README.md"
-    text = readme.read_text(encoding="utf-8")
-    section = "## Native EmoWOZ context RoBERTa"
-    if section not in text:
-        entry = (
-            section
-            + "\n\nWorkstream 5 uses past user/system history, native user labels and the original\nMELD-dev-selected window. See the [protocol](docs/EMOWOZ_B4.md),\n[results and paired comparisons](reports/b4/emowoz/results.md) and\n[executed notebook](notebooks/emowoz_b4.ipynb). Original B4 authors retain\ncredit; 13ray contributes this dataset extension. Large weights remain outside Git.\n\n"
-        )
-        readme.write_text(
-            text.replace("## Development checks", entry + "## Development checks"), encoding="utf-8"
-        )
-    pr = ROOT / "docs/EMOWOZ_B4_PR_DESCRIPTION.md"
-    pr.write_text(
-        f"""# Extend context RoBERTa to native EmoWOZ
-
-Reuse the original B4 implementation with its author attribution. Keep
-unlabelled system turns as history and score labelled user turns only.
-Five seeds achieve {headline["mean"] * 100:.2f}% mean non-neutral weighted-F1
-(population SD {headline["std"] * 100:.2f} points).
-
-- Fix k=all from the original MELD dev selection; no EmoWOZ test-driven tuning.
-- Keep native labels, causal per-dialogue/per-split context and effective batch 32.
-- Supply five shared-format test prediction CSVs, class/stratum metrics,
-  three E4 inference controls and paired whole-dialogue bootstrap comparisons.
-- Include reproducible English plots, source CSVs, executed notebook, manifests
-  and checkpoint checksums. Large weights stay ignored for separate sharing.
-- Preserve original MELD/DailyDialog configurations and shared shift definitions.
-
-Validation: {test_summary}. Predictions, native checkpoint round trip, E4
-controls and the notebook were audited after training. The report distinguishes changes in history,
-speaker prefixes and token budget; E4 controls are not separately retrained.
-Paired intervals are exploratory, unadjusted and conditional on five seed pairs.
-""",
-        encoding="utf-8",
-    )
     nb = nbformat.read(ROOT / "notebooks/emowoz_b4.ipynb", as_version=4)
     cells = [c for c in nb.cells if c.cell_type == "code"]
     assert all(c.execution_count is not None and len(c.source.splitlines()) <= 15 for c in cells)
@@ -84,7 +49,6 @@ Paired intervals are exploratory, unadjusted and conditional on five seed pairs.
     files = [
         ROOT / "README.md",
         note,
-        pr,
         ROOT / "notebooks/emowoz_b4.ipynb",
         ROOT / "configs/emowoz_b4.yaml",
         ROOT / "emotionshift/models/roberta_context.py",
