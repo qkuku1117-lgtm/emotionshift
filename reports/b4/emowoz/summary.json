@@ -1,0 +1,99 @@
+{
+  "dataset": "emowoz",
+  "model": "b4",
+  "window": "all",
+  "system_turns_retained_as_context": true,
+  "labels": [
+    "neutral",
+    "fearful",
+    "dissatisfied",
+    "apologetic",
+    "abusive",
+    "excited",
+    "satisfied"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "headline_metric": "weighted_f1_no_neutral",
+  "test": {
+    "n": 8634,
+    "metrics": {
+      "accuracy": {
+        "mean": 0.9184155663655316,
+        "std": 0.002614173913303853,
+        "ci95_seed0": [
+          0.9116500637466997,
+          0.9254105641596037
+        ]
+      },
+      "weighted_f1": {
+        "mean": 0.9167773372082945,
+        "std": 0.0019027083652875397,
+        "ci95_seed0": [
+          0.9093463911651376,
+          0.9234707946666656
+        ]
+      },
+      "macro_f1": {
+        "mean": 0.6129959933352047,
+        "std": 0.005072546218061831,
+        "ci95_seed0": [
+          0.5716218912998775,
+          0.6454925630844042
+        ]
+      },
+      "micro_f1_no_neutral": {
+        "mean": 0.8518355002064883,
+        "std": 0.003031482311879783,
+        "ci95_seed0": [
+          0.8386593588254804,
+          0.8624238221585123
+        ]
+      },
+      "weighted_f1_no_neutral": {
+        "mean": 0.8462033090520853,
+        "std": 0.0024578067539951765,
+        "ci95_seed0": [
+          0.8310817116799983,
+          0.8564992772860713
+        ]
+      },
+      "macro_f1_no_neutral": {
+        "mean": 0.5572415050350709,
+        "std": 0.005585622375564892,
+        "ci95_seed0": [
+          0.5089172873852481,
+          0.5950187162587883
+        ]
+      }
+    },
+    "derived_shift_f1_mean": 0.8059093493014095
+  },
+  "efficiency": {
+    "parameters": 124651015,
+    "seed0_model_dir_mb": 502.190435,
+    "inference_device": "cpu",
+    "machine": {
+      "platform": "Windows-11-10.0.26200-SP0",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "cpu_count": 32,
+      "python": "3.12.10"
+    },
+    "latency_one_utterance": {
+      "n": 50,
+      "median_ms": 79.03159997658804,
+      "p95_ms": 118.21219997364096
+    },
+    "batch_throughput": {
+      "n": 256,
+      "seconds": 28.062779799976852,
+      "utterances_per_second": 9.122403476230504
+    },
+    "timing_note": "Loaded seed-0 checkpoint after all training. Latency uses 50 sampled preassembled contexts; batch throughput uses the first 256 contexts. Context assembly is excluded. Resumed training time is invocation time, not total time."
+  }
+}

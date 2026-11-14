@@ -53,7 +53,9 @@ def k_name(k) -> str:
     return ALL if k is None else str(k)
 
 
-def context_inputs(df: pd.DataFrame, k, sep: str = "</s>", mode: str = "real", seed: int = 0) -> list[str]:
+def context_inputs(
+    df: pd.DataFrame, k, sep: str = "</s>", mode: str = "real", seed: int = 0
+) -> list[str]:
     """One input string per row of ``df`` (same order): past ``k`` turns, then the current one.
 
     ``df`` holds whole dialogues of one split with ``dialogue_id``, ``turn``, ``speaker``
@@ -88,7 +90,7 @@ def context_inputs(df: pd.DataFrame, k, sep: str = "</s>", mode: str = "real", s
                     pick[bad] = rng.integers(0, n, size=int(bad.sum()))
                 past = [turns[j] for j in pick]
             else:
-                past = turns[i - n_past:i]
+                past = turns[i - n_past : i]
             out[i] = f" {sep} ".join([*past, turns[i]])
     return pd.Series(out, index=pos).reindex(df.index).tolist()
 
@@ -96,9 +98,13 @@ def context_inputs(df: pd.DataFrame, k, sep: str = "</s>", mode: str = "real", s
 class RobertaContext(RobertaUtterance):
     """``RobertaUtterance`` on context inputs; ``k`` past turns (``"all"`` = every past turn)."""
 
-    def __init__(self, cfg: RobertaConfig | None = None, device: str | None = None, k=3):
-        super().__init__(cfg or RobertaConfig(max_len=256), device=device)
-        self.tokenizer.truncation_side = "left"   # drop the oldest context, keep the current utterance
+    def __init__(
+        self, cfg: RobertaConfig | None = None, device: str | None = None, k=3, *, labels=None
+    ):
+        super().__init__(cfg or RobertaConfig(max_len=256), device=device, labels=labels)
+        self.tokenizer.truncation_side = (
+            "left"  # drop the oldest context, keep the current utterance
+        )
         self.k = k_name(k)
 
     def inputs(self, df: pd.DataFrame, mode: str = "real", seed: int = 0) -> list[str]:
@@ -112,7 +118,14 @@ class RobertaContext(RobertaUtterance):
 
     def predict_dialogue(self, speakers, texts) -> list[str]:
         """Label every turn of one dialogue given so far (the demo's turn-by-turn call)."""
-        df = pd.DataFrame({"dialogue_id": 0, "turn": range(len(texts)), "speaker": list(speakers), "text": list(texts)})
+        df = pd.DataFrame(
+            {
+                "dialogue_id": 0,
+                "turn": range(len(texts)),
+                "speaker": list(speakers),
+                "text": list(texts),
+            }
+        )
         return self.predict_frame(df)
 
     def save(self, path):

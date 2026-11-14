@@ -1,0 +1,97 @@
+{
+  "dataset": "emowoz",
+  "model": "b3",
+  "labels": [
+    "neutral",
+    "fearful",
+    "dissatisfied",
+    "apologetic",
+    "abusive",
+    "excited",
+    "satisfied"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "headline_metric": "weighted_f1_no_neutral",
+  "test": {
+    "n": 8634,
+    "metrics": {
+      "accuracy": {
+        "mean": 0.8873291637711374,
+        "std": 0.003883309629779158,
+        "ci95_seed0": [
+          0.8799644858286805,
+          0.9006206210881489
+        ]
+      },
+      "weighted_f1": {
+        "mean": 0.8823574808301611,
+        "std": 0.0017246861667270786,
+        "ci95_seed0": [
+          0.8723858030814284,
+          0.895025347749816
+        ]
+      },
+      "macro_f1": {
+        "mean": 0.5609728614162489,
+        "std": 0.009928069613353586,
+        "ci95_seed0": [
+          0.5276691078681292,
+          0.6046734062638995
+        ]
+      },
+      "micro_f1_no_neutral": {
+        "mean": 0.7948289728852374,
+        "std": 0.0047800975384358554,
+        "ci95_seed0": [
+          0.7825332982691385,
+          0.8170887885235022
+        ]
+      },
+      "weighted_f1_no_neutral": {
+        "mean": 0.7808534299445539,
+        "std": 0.002877084381728575,
+        "ci95_seed0": [
+          0.7604935058290396,
+          0.8008202137122407
+        ]
+      },
+      "macro_f1_no_neutral": {
+        "mean": 0.500038715687517,
+        "std": 0.011255673174893961,
+        "ci95_seed0": [
+          0.46128958005893644,
+          0.5504132414043238
+        ]
+      }
+    },
+    "derived_shift_f1_mean": 0.7692534711165344
+  },
+  "efficiency": {
+    "parameters": 124651015,
+    "seed0_model_dir_mb": 502.190425,
+    "inference_device": "cpu",
+    "machine": {
+      "platform": "Windows-11-10.0.26200-SP0",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "cpu_count": 32,
+      "python": "3.12.10"
+    },
+    "latency_one_utterance": {
+      "n": 100,
+      "median_ms": 20.858249976299703,
+      "p95_ms": 33.754854975268245
+    },
+    "batch_throughput": {
+      "n": 8634,
+      "seconds": 121.73269180004718,
+      "utterances_per_second": 70.92589404152693
+    },
+    "timing_note": "Loaded seed-0 checkpoint after all training. Resumed training metadata records invocation time, not total training time."
+  }
+}

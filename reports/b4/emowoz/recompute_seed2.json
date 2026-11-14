@@ -1,0 +1,14 @@
+{
+  "requested_seed": 2,
+  "replacement": "latest requested fresh run, unconditional",
+  "preserved_seeds": [
+    0,
+    1,
+    3,
+    4
+  ],
+  "archive_relative": "checkpoints\\b4_emowoz\\recomputations\\20261113T174809Z",
+  "old_dev_score": 0.8356977779036424,
+  "new_dev_score": 0.8338877615751713,
+  "status": "complete"
+}

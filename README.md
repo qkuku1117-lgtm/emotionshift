@@ -221,6 +221,23 @@ native EmoWOZ labels using official splits and five seeds. See the
 The original model authors retain credit; 13ray contributes this dataset
 extension. Existing MELD/DailyDialog results are preserved.
 
+## Native EmoWOZ single-utterance RoBERTa
+
+Workstream 4 now has five-seed native-label EmoWOZ results alongside the
+SVM and recurrent baselines. See the [protocol](docs/EMOWOZ_B3.md),
+[results](reports/b3/emowoz/results.md) and
+[executed notebook](notebooks/emowoz_b3.ipynb).
+The original B3 implementation retains its attribution; 13ray contributes
+this dataset extension. Large checkpoints remain outside Git.
+
+## Native EmoWOZ context RoBERTa
+
+Workstream 5 uses past user/system history, native user labels and the original
+MELD-dev-selected window. See the [protocol](docs/EMOWOZ_B4.md),
+[results and paired comparisons](reports/b4/emowoz/results.md) and
+[executed notebook](notebooks/emowoz_b4.ipynb). Original B4 authors retain
+credit; 13ray contributes this dataset extension. Large weights remain outside Git.
+
 ## EmoWOZ status by workstream
 
 EmoWOZ is an extension beyond the proposal's core datasets. All rows use the native
@@ -235,8 +252,8 @@ comparable with MELD or DailyDialog. The numbers are generated in
 | 1 | Inertia / Markov baselines | done (Ruizhi), [`reports/b0/emowoz`](reports/b0/emowoz) | 5 | 29.24 (inertia, predicted history) |
 | 2 | TF-IDF + SVM | done (13ray), [`docs/EMOWOZ_B1_B2.md`](docs/EMOWOZ_B1_B2.md) | 5 | 76.50 |
 | 3 | BiGRU / BiLSTM | done (13ray), same doc | 5 | 77.05 / 77.01 |
-| 4 | RoBERTa-base, utterance only | not run | 0 | [TBD] |
-| 5 | RoBERTa-base with context | not run | 0 | [TBD] |
+| 4 | RoBERTa-base, utterance only | done (13ray), [`docs/EMOWOZ_B3.md`](docs/EMOWOZ_B3.md) | 5 | 78.09 |
+| 5 | RoBERTa-base with context | done (13ray), [`docs/EMOWOZ_B4.md`](docs/EMOWOZ_B4.md) | 5 | 84.62 |
 | 6 | ShiftAware | exploratory (Fpengz), variant `shiftaware_tf-d768-2layer-hm` | 3 | 82.05 |
 
 ## Development checks

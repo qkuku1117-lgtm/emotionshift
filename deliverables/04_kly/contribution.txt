@@ -1,0 +1,4 @@
+Built workstream #4 (B3): RoBERTa-base fine-tuned on single utterances, with the shared loader, metrics and prediction format.
+Ran 5 seeds on MELD and DailyDialog on a Colab T4, with best epoch chosen on dev, plus MELD-to-DailyDialog transfer (E8) and CPU latency (E9).
+Analysed results by emotion shift and shift type against B1, and explained predictions with Integrated Gradients.
+Provided the saved models, predict / predict_proba and cached embeddings for the demo, B4 and ShiftAware; executed notebook, figures.

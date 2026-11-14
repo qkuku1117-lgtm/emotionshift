@@ -1,0 +1,64 @@
+{
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "bootstrap": 1000,
+    "threads": 4,
+    "window": "all",
+    "window_selection_file": "reports/b4/selection.json",
+    "pretrained_repo": "FacebookAI/roberta-base",
+    "pretrained_revision": "e2da8e2f811d1448a5b465c236feacd80ffbac7b",
+    "controls": [
+      "none",
+      "shuffled",
+      "speakers"
+    ],
+    "model": {
+      "epochs": 3,
+      "lr": 1e-05,
+      "batch_size": 32,
+      "micro_batch_size": 2,
+      "eval_batch_size": 4,
+      "max_len": 256,
+      "warmup": 0.1,
+      "weight_decay": 0.01,
+      "class_weight": null,
+      "gradient_checkpointing": true,
+      "select_on": "weighted_f1_no_neutral"
+    }
+  },
+  "labels": [
+    "neutral",
+    "fearful",
+    "dissatisfied",
+    "apologetic",
+    "abusive",
+    "excited",
+    "satisfied"
+  ],
+  "python": "3.12.10",
+  "torch": "2.6.0+cu126",
+  "transformers": "5.21.1",
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "source_sha256_lf": {
+    "scripts/train_emowoz_context.py": "4ad99cf5da076129c2f800c90fe77fae6e967034b199f01833069a35a46ccebe",
+    "emotionshift/models/roberta.py": "e249ed9621ab58a2182be0e6f654b17f50462ab586e794514669950edf89c0eb",
+    "emotionshift/models/roberta_context.py": "9e8a60704bdd854d57983845ee4160f5b77b5dbd6b4c0a979841e3de0cc8ae6b",
+    "reports/b4/selection.json": "27b4f3c44877d86b1edb3a3d384394b1a49689152a67fdd8ebb7555c91260a4f",
+    "emotionshift/data/loaders.py": "9cfdd153f1a43cfa4ac070775512cf0f2886b58deef6671262ea639c9476b10e",
+    "emotionshift/data/labels.py": "faca85f0da9d23d47da28ad85a68f525d044a55cb7d7bd000f3e5fb16398c7b3",
+    "emotionshift/eval/metrics.py": "bac1e3d250fe198595ba28a41f48845b05c3a9863735cf17ffb4ac1d7afefaa0",
+    "scripts/train_emowoz_baselines.py": "8e342e1c459c2d075ca57725682f1e6626657c2925f26ce84b9412fd40b81b43",
+    "scripts/train_b0.py": "0ee3e04f265b5373703de08e193bca60c44dfafad56ebfce7fca09953d8818c0"
+  },
+  "raw_sha256": {
+    "data-split.json": "15a4060a7dd005585af4f64905392724e61d921e74404cc5074fca4069c05c91",
+    "emowoz-dialmage.json": "1035f0cf408a513192a08e7e830d2aac50dc74e13c424830b6cd986328a75160",
+    "emowoz-multiwoz.json": "b1805796d10b260ce6d5a18d9259dea7ea2ce58bf8516fa53ec00349e8e0ec58"
+  }
+}

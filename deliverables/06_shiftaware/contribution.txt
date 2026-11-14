@@ -1,0 +1,4 @@
+Designed and implemented ShiftAware (workstream #6): per-speaker and conversation memories, causal retrieval over other speakers' turns, a speaker prior, current evidence, a shift head and a learned gate that mixes the two emotion distributions.
+Trained it end to end with RoBERTa on MELD and DailyDialog over five seeds, selected variants on dev only, and ran exploratory transformer and EmoWOZ variants.
+Evaluated it against the RoBERTa baselines with the shared metrics, stable/shift strata and paired dialogue-bootstrap tests (H3: shift-turn target not met).
+Prepared the executed notebook, prediction CSVs, saved model for the demo, slides, figures and narration script.
