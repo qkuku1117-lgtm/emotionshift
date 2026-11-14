@@ -1,0 +1,19 @@
+{
+  "status": "complete",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "full_test_suite": "167 passed; validated training model source is unchanged",
+  "test_command": "python -X utf8 -m pytest -q",
+  "artifact_audit": "five native prediction CSVs; 8634 targets each; source/data hashes; dev selection; checkpoint round trip passed",
+  "notebook": "executed without errors; code snippets <=15 lines",
+  "english_text_files_scanned": 48,
+  "figures": "three English figures visually reviewed, all >=1600px wide with source CSVs",
+  "existing_datasets": "shared loader, shifts, original configurations, MELD/DailyDialog predictions and reports unchanged",
+  "large_weights": "ignored under models/b3_emowoz; checksums in verification.json",
+  "commit_push": "not performed for workstream 4"
+}

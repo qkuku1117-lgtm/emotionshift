@@ -1,0 +1,9 @@
+{
+  "best_seed_on_dev": 0,
+  "metric": "weighted_f1_no_neutral",
+  "test_used_for_selection": false,
+  "window": "all",
+  "window_selection_source": "reports/b4/selection.json",
+  "max_len": 256,
+  "system_history_retained": true
+}

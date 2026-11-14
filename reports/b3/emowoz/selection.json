@@ -1,0 +1,5 @@
+{
+  "best_seed_on_dev": 1,
+  "metric": "weighted_f1_no_neutral",
+  "test_used_for_selection": false
+}

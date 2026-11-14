@@ -221,6 +221,23 @@ native EmoWOZ labels using official splits and five seeds. See the
 The original model authors retain credit; 13ray contributes this dataset
 extension. Existing MELD/DailyDialog results are preserved.
 
+## Native EmoWOZ single-utterance RoBERTa
+
+Workstream 4 now has five-seed native-label EmoWOZ results alongside the
+SVM and recurrent baselines. See the [protocol](docs/EMOWOZ_B3.md),
+[results](reports/b3/emowoz/results.md) and
+[executed notebook](notebooks/emowoz_b3.ipynb).
+The original B3 implementation retains its attribution; 13ray contributes
+this dataset extension. Large checkpoints remain outside Git.
+
+## Native EmoWOZ context RoBERTa
+
+Workstream 5 uses past user/system history, native user labels and the original
+MELD-dev-selected window. See the [protocol](docs/EMOWOZ_B4.md),
+[results and paired comparisons](reports/b4/emowoz/results.md) and
+[executed notebook](notebooks/emowoz_b4.ipynb). Original B4 authors retain
+credit; 13ray contributes this dataset extension. Large weights remain outside Git.
+
 ## EmoWOZ status by workstream
 
 EmoWOZ is an extension beyond the proposal's core datasets. All rows use the native

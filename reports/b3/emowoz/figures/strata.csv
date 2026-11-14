@@ -1,0 +1,13 @@
+model,group,weighted_f1_no_neutral
+b1,stratum:first,0.4897119341563786
+b1,stratum:stable,0.6738134543498108
+b1,stratum:shift,0.8193099083773221
+b2_bigru,stratum:first,0.44833791509632076
+b2_bigru,stratum:stable,0.68721971918358
+b2_bigru,stratum:shift,0.8282739290771541
+b2_bilstm,stratum:first,0.4454899216849009
+b2_bilstm,stratum:stable,0.681308028826955
+b2_bilstm,stratum:shift,0.8300538868190792
+b3_roberta,stratum:first,0.5775343234135607
+b3_roberta,stratum:stable,0.6917132061862632
+b3_roberta,stratum:shift,0.827481171139237

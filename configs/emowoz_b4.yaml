@@ -1,0 +1,21 @@
+# Workstream 5: reuse the context window selected on MELD dev.
+seeds: [0, 1, 2, 3, 4]
+bootstrap: 1000
+threads: 4
+window: all
+window_selection_file: reports/b4/selection.json
+pretrained_repo: FacebookAI/roberta-base
+pretrained_revision: e2da8e2f811d1448a5b465c236feacd80ffbac7b
+controls: [none, shuffled, speakers]
+model:
+  epochs: 3
+  lr: 1.0e-5
+  batch_size: 32
+  micro_batch_size: 2
+  eval_batch_size: 4
+  max_len: 256
+  warmup: 0.1
+  weight_decay: 0.01
+  class_weight: null
+  gradient_checkpointing: true
+  select_on: weighted_f1_no_neutral

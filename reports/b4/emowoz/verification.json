@@ -1,0 +1,25 @@
+{
+  "prediction_csvs": 5,
+  "targets_per_csv": 8634,
+  "native_labels_verified": true,
+  "dev_selection_verified": true,
+  "metrics_recomputed": true,
+  "checkpoint_round_trip_verified": true,
+  "system_context_retained_user_targets_only": true,
+  "e4_controls_verified": true,
+  "paired_comparisons_verified": true,
+  "prediction_sha256": {
+    "predictions\\b4_emowoz_test_seed0.csv": "d8efe513092d466c5e57888dc6fef65b90c89178298890a0f43259c6938aba69",
+    "predictions\\b4_emowoz_test_seed1.csv": "d227059dd1e7a5861d8aa83be5a7c061f0afdbd5ae6bb4e1ae656b39e952fba0",
+    "predictions\\b4_emowoz_test_seed2.csv": "a9c2ed9714a2384e4d558bd45f9351f71f0600802ca3c8d98c49932411578fd1",
+    "predictions\\b4_emowoz_test_seed3.csv": "c574782239f3442539ed99acaeab85bdf72137ff53884bf6cea03202f8031aab",
+    "predictions\\b4_emowoz_test_seed4.csv": "22c39a437e9b9bb7d7fc4c050e37c3bbcc2c040ac51ac00ee1f3bba913724f2d"
+  },
+  "checkpoint_sha256": {
+    "models\\b4_emowoz\\seed0\\model.safetensors": "a4afa9ba90e6709cc7ad977d6670e95ccff4d163634c2da157cc1258906684c4",
+    "models\\b4_emowoz\\seed1\\model.safetensors": "583c381096c993bc111bc65e0fda38ef8aa0855585e0d051d1673171a161c545",
+    "models\\b4_emowoz\\seed2\\model.safetensors": "eb80e7e6ac3cf837ac57533e45799372fa4dce558d9c5016dc9b26e3dd0e75f7",
+    "models\\b4_emowoz\\seed3\\model.safetensors": "381fcb1a00227c110bb6e935c5ed1034075915ce653d03924b72cf4011856a14",
+    "models\\b4_emowoz\\seed4\\model.safetensors": "eb674fef932211361ed0ebb0eaf86d37a28a89e69e946f3f8ef76ebe75f98f91"
+  }
+}

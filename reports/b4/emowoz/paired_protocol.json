@@ -1,0 +1,16 @@
+{
+  "unit": "whole dialogue, shared between models and seed pairs",
+  "fixed_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "multiplicity": "exploratory unadjusted intervals",
+  "resamples": 1000,
+  "seed": 0,
+  "statistic": "mean of per-seed metric differences; no seed resampling",
+  "window": "fixed from MELD dev; test does not select configurations",
+  "limitations": "B4 vs B3 also changes speaker tags and token budget. E4 controls are inference-time perturbations, not retrained models."
+}

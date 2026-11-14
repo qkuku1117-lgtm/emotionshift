@@ -1,0 +1,19 @@
+{
+  "status": "complete",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "targets_per_csv": 8634,
+  "full_project_tests": "172 passed in 31.41s",
+  "paired_bootstrap_tests": "2 passed",
+  "prediction_and_e4_audits": "passed",
+  "notebook": "executed without errors, snippets <=15 lines",
+  "english_text_files_scanned": 57,
+  "figures": "dimensions verified; manual visual review separate",
+  "large_weights": "ignored; checksums supplied",
+  "commit_push": "not performed for workstream 5"
+}
