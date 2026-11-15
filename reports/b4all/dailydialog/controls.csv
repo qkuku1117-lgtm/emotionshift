@@ -1,0 +1,17 @@
+input,group,n,metric,mean,std,seeds
+real,all,7019,micro_f1_no_neutral,0.5962,0.0092,5
+real,stratum:first,1782,micro_f1_no_neutral,0.5674,0.0106,5
+real,stratum:stable,4295,micro_f1_no_neutral,0.4576,0.0083,5
+real,stratum:shift,942,micro_f1_no_neutral,0.735,0.0237,5
+none,all,7019,micro_f1_no_neutral,0.5153,0.0092,5
+none,stratum:first,1782,micro_f1_no_neutral,0.5134,0.0164,5
+none,stratum:stable,4295,micro_f1_no_neutral,0.3739,0.0114,5
+none,stratum:shift,942,micro_f1_no_neutral,0.6397,0.0157,5
+shuffled_context,all,7019,micro_f1_no_neutral,0.4927,0.0044,5
+shuffled_context,stratum:first,1782,micro_f1_no_neutral,0.5084,0.0181,5
+shuffled_context,stratum:stable,4295,micro_f1_no_neutral,0.3077,0.0126,5
+shuffled_context,stratum:shift,942,micro_f1_no_neutral,0.6682,0.0185,5
+shuffled_speakers,all,7019,micro_f1_no_neutral,0.5949,0.0076,5
+shuffled_speakers,stratum:first,1782,micro_f1_no_neutral,0.5708,0.0124,5
+shuffled_speakers,stratum:stable,4295,micro_f1_no_neutral,0.4524,0.0081,5
+shuffled_speakers,stratum:shift,942,micro_f1_no_neutral,0.7353,0.0203,5

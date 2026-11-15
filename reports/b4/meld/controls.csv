@@ -1,21 +1,17 @@
-input,metric,group,n,mean,std
-B3 (trained without context),weighted_f1,all,2610.0,0.6285,0.0031
-B3 (trained without context),weighted_f1,stratum:first,746.0,0.6518,0.0051
-B3 (trained without context),weighted_f1,stratum:stable,861.0,0.6973,0.0024
-B3 (trained without context),weighted_f1,stratum:shift,1003.0,0.5591,0.0091
-real context (B4),weighted_f1,all,2610.0,0.6382,0.003
-real context (B4),weighted_f1,stratum:first,746.0,0.6527,0.0081
-real context (B4),weighted_f1,stratum:stable,861.0,0.7315,0.0065
-real context (B4),weighted_f1,stratum:shift,1003.0,0.553,0.0019
-no context at test,weighted_f1,all,2610.0,0.6206,0.0048
-no context at test,weighted_f1,stratum:first,746.0,0.64,0.0056
-no context at test,weighted_f1,stratum:stable,861.0,0.6953,0.0059
-no context at test,weighted_f1,stratum:shift,1003.0,0.5496,0.0051
-shuffled context,weighted_f1,all,2610.0,0.6182,0.0026
-shuffled context,weighted_f1,stratum:first,746.0,0.6461,0.007
-shuffled context,weighted_f1,stratum:stable,861.0,0.687,0.0044
-shuffled context,weighted_f1,stratum:shift,1003.0,0.5463,0.0064
-shuffled speakers,weighted_f1,all,2610.0,0.6356,0.0012
-shuffled speakers,weighted_f1,stratum:first,746.0,0.649,0.0052
-shuffled speakers,weighted_f1,stratum:stable,861.0,0.7289,0.0042
-shuffled speakers,weighted_f1,stratum:shift,1003.0,0.5514,0.0071
+input,group,n,metric,mean,std,seeds
+real,all,2610,weighted_f1,0.6334,0.0045,5
+real,stratum:first,746,weighted_f1,0.6449,0.0043,5
+real,stratum:stable,861,weighted_f1,0.7285,0.0119,5
+real,stratum:shift,1003,weighted_f1,0.5486,0.0089,5
+none,all,2610,weighted_f1,0.6211,0.0032,5
+none,stratum:first,746,weighted_f1,0.6393,0.005,5
+none,stratum:stable,861,weighted_f1,0.6957,0.0058,5
+none,stratum:shift,1003,weighted_f1,0.5513,0.008,5
+shuffled_context,all,2610,weighted_f1,0.6138,0.0052,5
+shuffled_context,stratum:first,746,weighted_f1,0.6365,0.0082,5
+shuffled_context,stratum:stable,861,weighted_f1,0.6909,0.0075,5
+shuffled_context,stratum:shift,1003,weighted_f1,0.5386,0.012,5
+shuffled_speakers,all,2610,weighted_f1,0.6325,0.0044,5
+shuffled_speakers,stratum:first,746,weighted_f1,0.6436,0.0018,5
+shuffled_speakers,stratum:stable,861,weighted_f1,0.7259,0.0094,5
+shuffled_speakers,stratum:shift,1003,weighted_f1,0.5499,0.0111,5

@@ -1,0 +1,17 @@
+input,group,n,metric,score
+real,all,8634,weighted_f1_no_neutral,0.8414059064079498
+real,stratum:first,1100,weighted_f1_no_neutral,0.5792824074074074
+real,stratum:stable,4884,weighted_f1_no_neutral,0.8021147518484756
+real,stratum:shift,2650,weighted_f1_no_neutral,0.8674834174165602
+none,all,8634,weighted_f1_no_neutral,0.605425826916948
+none,stratum:first,1100,weighted_f1_no_neutral,0.5276995305164319
+none,stratum:stable,4884,weighted_f1_no_neutral,0.48095103433441655
+none,stratum:shift,2650,weighted_f1_no_neutral,0.6577477665807014
+shuffled_context,all,8634,weighted_f1_no_neutral,0.7050494510212724
+shuffled_context,stratum:first,1100,weighted_f1_no_neutral,0.5792824074074074
+shuffled_context,stratum:stable,4884,weighted_f1_no_neutral,0.5332787403169604
+shuffled_context,stratum:shift,2650,weighted_f1_no_neutral,0.7789083934238675
+shuffled_speakers,all,8634,weighted_f1_no_neutral,0.8424042076152195
+shuffled_speakers,stratum:first,1100,weighted_f1_no_neutral,0.5829861111111111
+shuffled_speakers,stratum:stable,4884,weighted_f1_no_neutral,0.8034086726390979
+shuffled_speakers,stratum:shift,2650,weighted_f1_no_neutral,0.8679061767868437

@@ -1,0 +1,17 @@
+input,group,n,metric,score
+real,all,7019,micro_f1_no_neutral,0.5807238714924766
+real,stratum:first,1782,micro_f1_no_neutral,0.5553319919517102
+real,stratum:stable,4295,micro_f1_no_neutral,0.46203904555314534
+real,stratum:shift,942,micro_f1_no_neutral,0.698076923076923
+none,all,7019,micro_f1_no_neutral,0.4991055456171735
+none,stratum:first,1782,micro_f1_no_neutral,0.4968152866242038
+none,stratum:stable,4295,micro_f1_no_neutral,0.37349397590361444
+none,stratum:shift,942,micro_f1_no_neutral,0.611764705882353
+shuffled_context,all,7019,micro_f1_no_neutral,0.4917894736842105
+shuffled_context,stratum:first,1782,micro_f1_no_neutral,0.5020746887966805
+shuffled_context,stratum:stable,4295,micro_f1_no_neutral,0.32671081677704195
+shuffled_context,stratum:shift,942,micro_f1_no_neutral,0.6382978723404256
+shuffled_speakers,all,7019,micro_f1_no_neutral,0.5816409423233144
+shuffled_speakers,stratum:first,1782,micro_f1_no_neutral,0.5524193548387096
+shuffled_speakers,stratum:stable,4295,micro_f1_no_neutral,0.46153846153846156
+shuffled_speakers,stratum:shift,942,micro_f1_no_neutral,0.7018216682646213

@@ -13,7 +13,7 @@ proposal.
 | 2 | TF-IDF + linear SVM | QIN LIXIAN | ✅ done: [`docs/B1_TFIDF_SVM.md`](docs/B1_TFIDF_SVM.md) |
 | 3 | BiGRU / BiLSTM | DANG NGUYEN TUAN THANH | ✅ done, merged 30 Oct: [`docs/B2_BIGRU_BILSTM.md`](docs/B2_BIGRU_BILSTM.md) |
 | 4 | Transformer, utterance only (RoBERTa-base) | YE KUNLIN | ✅ done, merged 30 Oct: [`docs/B3_ROBERTA.md`](docs/B3_ROBERTA.md); trained models on Google Drive |
-| 5 | Context-aware RoBERTa | QIN LIXIAN & HE RUIZHI | ✅ done, merged 10 Nov: [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md) |
+| 5 | Context-aware RoBERTa | HU ANQI (protocol and first implementation: QIN LIXIAN; first EmoWOZ extension: HE RUIZHI) | ✅ done: [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md), [`notebook`](notebooks/b4_context.ipynb) |
 | 6 | ShiftAware (speaker / shift-aware) | WANG ZHOUFU | ✅ done, merged 1 Nov: [`results`](reports/shiftaware/results.md), [`selection`](reports/shiftaware/selection.md), [`notebook`](notebooks/shiftaware.ipynb); predictions include a `shift_prob` column |
 | — | Demo app, slides and video integration | QIN LIXIAN | demo app: [`app/app.py`](app/app.py) (`uv sync --extra demo`, then `uv run streamlit run app/app.py`); slides and video are submitted separately |
 
@@ -114,7 +114,7 @@ scripts/                 fetch_data.sh (fetch_data.py: same, cross-platform); tr
                          artifact scripts per model; verify_b0.py, verify_b2.py;
                          summarize_all.py builds reports/summary/ from the prediction CSVs
 notebooks/               exploration notebooks (01, 02) and one notebook per model
-                         (b0 to b3, b4_colab, shiftaware, emowoz_b1_b2, emowoz_b3, emowoz_b4)
+                         (b0 to b3, b4_context, shiftaware, emowoz_b1_b2, emowoz_b3)
 tests/                   data rules, metrics, each model's interface, EmoWOZ, the summary script
                          and merge compatibility checks
 reports/                 results tables and figures per model (b0 to b4, shiftaware*, emowoz*),
@@ -212,12 +212,12 @@ comparable with MELD or DailyDialog. The numbers are generated in
 | 2 | TF-IDF + SVM | HE RUIZHI | [`docs/EMOWOZ_B1_B2.md`](docs/EMOWOZ_B1_B2.md), [`results`](reports/emowoz_baselines/results.md), [`notebook`](notebooks/emowoz_b1_b2.ipynb) | 5 | 76.50 |
 | 3 | BiGRU / BiLSTM | HE RUIZHI | same as #2 | 5 | 77.05 / 77.01 |
 | 4 | RoBERTa-base, utterance only | HE RUIZHI | [`docs/EMOWOZ_B3.md`](docs/EMOWOZ_B3.md), [`results`](reports/b3/emowoz/results.md), [`notebook`](notebooks/emowoz_b3.ipynb) | 5 | 78.09 |
-| 5 | RoBERTa-base with context | HE RUIZHI | [`docs/EMOWOZ_B4.md`](docs/EMOWOZ_B4.md), [`results and paired comparisons`](reports/b4/emowoz/results.md), [`notebook`](notebooks/emowoz_b4.ipynb) | 5 | 84.62 |
+| 5 | RoBERTa-base with context | HU ANQI (first extension: HE RUIZHI) | [`docs/B4_CONTEXT.md`](docs/B4_CONTEXT.md), [`results`](reports/b4/results.md), [`notebook`](notebooks/b4_context.ipynb) | 5 | 84.38 |
 | 6 | ShiftAware | WANG ZHOUFU (exploratory) | variant `shiftaware_tf-d768-2layer-hm` | 3 | 82.05 |
 
 Models 2 to 5 reuse the original MELD/DailyDialog implementations, whose authors
 keep credit for them; the EmoWOZ runs are a dataset extension. Model 5 uses past
-user/system history, native user labels and the window selected on MELD dev.
+user/system history, native user labels and a window chosen on EmoWOZ dev (k = 10; k = all gives 84.31).
 Existing MELD/DailyDialog results are unchanged. Large checkpoints stay outside Git.
 
 ## Development checks

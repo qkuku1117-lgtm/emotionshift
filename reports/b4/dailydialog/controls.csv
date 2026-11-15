@@ -1,21 +1,17 @@
-input,metric,group,n,mean,std
-B3 (trained without context),micro_f1_no_neutral,all,7019.0,0.5534,0.0039
-B3 (trained without context),micro_f1_no_neutral,stratum:first,1782.0,0.5267,0.0135
-B3 (trained without context),micro_f1_no_neutral,stratum:stable,4295.0,0.3789,0.0043
-B3 (trained without context),micro_f1_no_neutral,stratum:shift,942.0,0.7146,0.0111
-real context (B4),micro_f1_no_neutral,all,7019.0,0.5961,0.0034
-real context (B4),micro_f1_no_neutral,stratum:first,1782.0,0.5705,0.0117
-real context (B4),micro_f1_no_neutral,stratum:stable,4295.0,0.4523,0.0092
-real context (B4),micro_f1_no_neutral,stratum:shift,942.0,0.7406,0.0078
-no context at test,micro_f1_no_neutral,all,7019.0,0.5292,0.0052
-no context at test,micro_f1_no_neutral,stratum:first,1782.0,0.534,0.0097
-no context at test,micro_f1_no_neutral,stratum:stable,4295.0,0.3722,0.006
-no context at test,micro_f1_no_neutral,stratum:shift,942.0,0.6659,0.0114
-shuffled context,micro_f1_no_neutral,all,7019.0,0.5052,0.0042
-shuffled context,micro_f1_no_neutral,stratum:first,1782.0,0.5197,0.0132
-shuffled context,micro_f1_no_neutral,stratum:stable,4295.0,0.319,0.0073
-shuffled context,micro_f1_no_neutral,stratum:shift,942.0,0.666,0.0076
-shuffled speakers,micro_f1_no_neutral,all,7019.0,0.597,0.0037
-shuffled speakers,micro_f1_no_neutral,stratum:first,1782.0,0.5676,0.0119
-shuffled speakers,micro_f1_no_neutral,stratum:stable,4295.0,0.4557,0.0073
-shuffled speakers,micro_f1_no_neutral,stratum:shift,942.0,0.7403,0.0093
+input,group,n,metric,mean,std,seeds
+real,all,7019,micro_f1_no_neutral,0.5947,0.007,5
+real,stratum:first,1782,micro_f1_no_neutral,0.5748,0.0137,5
+real,stratum:stable,4295,micro_f1_no_neutral,0.4489,0.0071,5
+real,stratum:shift,942,micro_f1_no_neutral,0.7381,0.0133,5
+none,all,7019,micro_f1_no_neutral,0.5186,0.0067,5
+none,stratum:first,1782,micro_f1_no_neutral,0.5197,0.005,5
+none,stratum:stable,4295,micro_f1_no_neutral,0.3686,0.0079,5
+none,stratum:shift,942,micro_f1_no_neutral,0.6492,0.0066,5
+shuffled_context,all,7019,micro_f1_no_neutral,0.5006,0.0079,5
+shuffled_context,stratum:first,1782,micro_f1_no_neutral,0.5208,0.0153,5
+shuffled_context,stratum:stable,4295,micro_f1_no_neutral,0.3095,0.0052,5
+shuffled_context,stratum:shift,942,micro_f1_no_neutral,0.6807,0.007,5
+shuffled_speakers,all,7019,micro_f1_no_neutral,0.5942,0.0068,5
+shuffled_speakers,stratum:first,1782,micro_f1_no_neutral,0.5739,0.018,5
+shuffled_speakers,stratum:stable,4295,micro_f1_no_neutral,0.4504,0.0069,5
+shuffled_speakers,stratum:shift,942,micro_f1_no_neutral,0.7362,0.0145,5
