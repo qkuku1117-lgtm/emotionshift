@@ -1,0 +1,4 @@
+Built a context-aware RoBERTa pipeline for workstream #5 (B4), with AI assistance that I declare in my own AI form: an input builder in the shared format, the model class, a resumable training script with a window sweep, and tests.
+Ran it on Colab on MELD, DailyDialog and EmoWOZ: window sweep on dev, 5 seeds at k = 10 and at k = all, input controls (E4) on every seed, and B4+ (class-weighted) on MELD.
+Analysed the gain over B3 on stable and shift turns and by shift type, compared k = 10 with k = all on all three datasets, and wrote the write-up (docs/B4_CONTEXT.md), results and executed notebook; submitted as a pull request.
+The B4 protocol (window sweep, E4 controls, B4+) and the first implementation are QIN LIXIAN's and the first EmoWOZ extension is HE RUIZHI's; my runs reproduce their k = all results (MELD 63.30 vs 63.82, DailyDialog 59.62 vs 59.61, EmoWOZ 84.31 vs 84.62).

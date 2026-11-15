@@ -1,0 +1,4 @@
+dataset,metric,b3_no_context,b4_k10,b4_k10_sd,b4_k_all,b4_k_all_sd,k_all_minus_k10,ci_low,ci_high
+MELD,weighted-F1,62.85,63.34,0.41,63.3,0.42,-0.04,-1.33,0.58
+DailyDialog (test_dedup),micro-F1 excl. neutral,55.34,58.71,0.46,59.62,0.82,0.92,-0.42,1.91
+EmoWOZ,weighted-F1 excl. neutral,78.09,84.38,0.16,84.31,0.22,-0.07,-0.44,0.57

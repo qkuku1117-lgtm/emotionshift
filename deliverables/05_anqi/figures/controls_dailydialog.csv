@@ -1,0 +1,5 @@
+input,micro_f1_no_neutral,sd
+real history,59.47,0.7
+no history,51.86,0.67
+shuffled history,50.06,0.79
+shuffled speakers,59.42,0.68

@@ -1,0 +1,4 @@
+dataset,metric,stable_gain,stable_ci_low,stable_ci_high,shift_gain,shift_ci_low,shift_ci_high
+MELD,weighted-F1,3.12,1.67,4.68,-1.05,-2.52,0.47
+DailyDialog,micro-F1 excl. neutral,7.38,3.88,10.73,0.73,-1.25,2.65
+EmoWOZ,weighted-F1 excl. neutral,11.15,7.79,14.65,4.33,3.16,5.67
