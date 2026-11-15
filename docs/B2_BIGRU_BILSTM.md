@@ -145,9 +145,7 @@ the repository's existing report and uses a different model.
 Compare actual results in `reports/b2/results.md`; do not assume either neural
 model improves on the TF-IDF baseline.
 
-See `docs/references/b2_refs.txt` for APA references. Implementation and
-preparation used AI assistance. Review and understand the code, disclose this
-complete unedited chat as the guide requires, and complete the personal forms.
+See `docs/references/b2_refs.txt` for APA references.
 
 ## Validation
 

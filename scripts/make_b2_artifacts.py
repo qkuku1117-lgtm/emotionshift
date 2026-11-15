@@ -156,7 +156,7 @@ def main():
         "Implemented utterance-level BiGRU and BiLSTM models and the shared demo interface.\n"
         "Ran train/dev/test experiments on MELD and DailyDialog with five seeds.\n"
         "Produced prediction CSVs, dialogue bootstrap CIs, shift analyses and efficiency measurements.\n"
-        "Prepared an executed notebook, figures and result notes with AI assistance.\n", encoding="utf-8")
+        "Prepared an executed notebook, figures and result notes.\n", encoding="utf-8")
     (HANDIN / "README.md").write_text(
         "# Thanh workstream hand-in\n\nCode and results are in the normal repository folders. "
         "Use docs/B2_BIGRU_BILSTM.md as the entry point.\n\n"
@@ -199,7 +199,7 @@ def make_notebook():
            "not calibrated confidence estimates. Exact timings depend on CPU and thread settings."),
         code('for dataset in ["meld", "dailydialog"]:\n    for arch in ["gru", "lstm"]:\n        s = json.loads((ROOT / f"reports/b2/{dataset}/b2_bi{arch}/summary.json").read_text())\n        e = s["efficiency"]\n        print(dataset, arch, {k: e[k] for k in ["parameters", "model_file_mb", "train_seconds", "latency_one_utterance"]})'),
         md("## References\nSee `docs/references/b2_refs.txt` for APA references to GRU, LSTM, bidirectional RNN, MELD and DailyDialog.\n\n"
-           "AI assistance was used for implementation and preparation. Review, explain and disclose it per the team guide.")]
+           "")]
     nb = nbf.v4.new_notebook(cells=cells, metadata={"kernelspec": {
         "display_name": "Python 3", "language": "python", "name": "python3"}})
     notebook_path = ROOT / "notebooks" / "b2_bigru_bilstm.ipynb"

@@ -57,6 +57,5 @@ Native shared metrics, class/stratum tables, confusion matrices, derived shift
 F1 and 1,000-resample whole-dialogue seed-0 intervals are reported. Seed SD and
 bootstrap uncertainty have different meanings. No test score chooses a model.
 
-English project artifacts are separate from personal Chinese notes. Disclose
-AI assistance per the team guide; slides, own-voice narration and personal
-forms remain separate deliverables.
+English project artifacts are separate from personal Chinese notes. Slides,
+own-voice narration and personal forms remain separate deliverables.

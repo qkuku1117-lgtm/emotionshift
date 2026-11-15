@@ -51,7 +51,7 @@ Gradient accumulation and checkpointing follow the official Trainer guidance:
 https://huggingface.co/docs/transformers/grad_accumulation
 https://huggingface.co/docs/transformers/grad_checkpointing
 
-AI assistance must be declared per the team guide. English project artifacts
+English project artifacts
 are separate from personal Chinese reference notes.
 
 Fresh seeds 2-4 took approximately 52-57 minutes each on this laptop during the

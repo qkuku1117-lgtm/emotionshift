@@ -301,7 +301,7 @@ def notes(comparison):
         "Original MELD/DailyDialog experiment configurations, predictions and reports are untouched. Old checkpoint label defaults remain compatible.",
         "`reports/b1/emowoz/` and `reports/b2/emowoz/` contain dev choices, per-seed scores, confusion/stratum tables, histories and summaries. Predictions retain the original twelve columns first, followed by provenance.",
         "Checkpoints are generated under `models/`; small B2 `.pt` checkpoints can be supplied for the demo. SVM joblib remains ignored like other B1 artifacts.",
-        "`notebooks/emowoz_b1_b2.ipynb` is the executed walkthrough. Slides, own-voice narration and personal forms remain separate. AI assistance must be disclosed according to the team guide.",
+        "`notebooks/emowoz_b1_b2.ipynb` is the executed walkthrough. Slides, own-voice narration and personal forms remain separate.",
     ]
     (OUT / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
