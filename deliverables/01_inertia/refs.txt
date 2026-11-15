@@ -1,19 +1,57 @@
 References (APA-style source list)
 
-Poria, S., Hazarika, D., Majumder, N., Naik, G., Cambria, E., & Mihalcea, R. (2019).
-MELD: A multimodal multi-party dataset for emotion recognition in conversations.
-Proceedings of ACL, 527–536. https://aclanthology.org/P19-1050/
+Feng, S., Lubis, N., Geishauser, C., Lin, H.-C., Heck, M., van Niekerk, C., & Gašić, M. (2022).
+EmoWOZ: A large-scale corpus and labelling scheme for emotion recognition in task-oriented dialogue systems.
+Proceedings of LREC, 4096–4113.
+https://aclanthology.org/2022.lrec-1.436/
 
 Li, Y., Su, H., Shen, X., Li, W., Cao, Z., & Niu, S. (2017).
 DailyDialog: A manually labelled multi-turn dialogue dataset.
-Proceedings of IJCNLP, 986–995. https://aclanthology.org/I17-1099/
+Proceedings of IJCNLP, 986–995.
+https://aclanthology.org/I17-1099/
 
-Feng, S., Lubis, N., Geishauser, C., Lin, H.-C., Heck, M., van Niekerk, C., & Gašić, M. (2022).
-EmoWOZ: A large-scale corpus and labelling scheme for emotion recognition in
-task-oriented dialogue systems. Proceedings of LREC, 4096–4113.
-https://aclanthology.org/2022.lrec-1.436/
+Poria, S., Hazarika, D., Majumder, N., Naik, G., Cambria, E., & Mihalcea, R. (2019).
+MELD: A multimodal multi-party dataset for emotion recognition in conversations.
+Proceedings of ACL, 527–536.
+https://aclanthology.org/P19-1050/
 
-Team implementation references: docs/proposal.md (B0 protocol),
-notebooks/02_quick_baselines.ipynb (lagged predicted-history convention),
-emotionshift/models/tfidf.py (supporting recognizer),
-emotionshift/eval/metrics.py (scoring and dialogue resampling).
+EmoWOZ release and format sources
+
+Official release and split files:
+https://zenodo.org/records/6506504
+Author-maintained format reference:
+https://huggingface.co/datasets/hhu-dsml/emowoz/blob/main/emowoz.py
+Dataset licence: CC BY-NC 4.0.
+
+Project implementation and experiment sources
+
+B0 protocol and evaluation:
+docs/B0_BASELINES.md
+emotionshift/models/b0.py
+emotionshift/eval/metrics.py
+reports/b0/results.md
+reports/b0/inertia_examples/README.md
+reports/b0/paired/README.md
+reports/b0/transitions/README.md
+
+EmoWOZ integration and label policy:
+docs/EMOWOZ.md
+emotionshift/data/loaders.py
+emotionshift/data/labels.py
+Use load("emowoz") for native labels with unlabelled system context.
+load_emowoz_shared() is an explicitly lossy interoperability view; the model extensions use native labels.
+
+EmoWOZ model extensions:
+docs/EMOWOZ_B1_B2.md
+docs/EMOWOZ_B3.md
+docs/EMOWOZ_B4.md
+reports/b3/emowoz/results.md
+reports/b4/emowoz/results.md
+
+Original team model implementations:
+emotionshift/models/tfidf.py
+emotionshift/models/birnn.py
+emotionshift/models/roberta.py
+emotionshift/models/roberta_context.py
+
+The original model authors retain credit. He Ruizhi contributes EmoWOZ integration, model experiment extensions, verification and supporting analyses. These references cover the full contribution scope, beyond the baseline-only recorded video.

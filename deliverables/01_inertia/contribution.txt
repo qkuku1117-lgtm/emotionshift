@@ -1,10 +1,15 @@
-Draft for personal review; include only work you have reviewed and can explain.
+He Ruizhi — contribution summary
 
-Implemented B0 majority, predicted-history inertia and Markov transition floors.
-Used the shared pipeline on MELD, DailyDialog and native-label EmoWOZ, with
-dev-only donor selection and explicit separation of gold-history oracle references.
-Prepared reproducible prediction exports, stratified metrics, dialogue-bootstrap
-intervals, forecasting results, an executed notebook and source figures.
-Added causal-history tests and an audit of all 72 prediction files.
-Implementation and preparation used AI assistance; shared loaders, the SVM
-recognizer and evaluation helpers were supplied by the team and are reused.
+1. Implemented and evaluated B0 majority, predicted-history inertia and Markov baselines on MELD, DailyDialog and native-label EmoWOZ, separating gold-history oracle references from deployable results.
+2. Contributed EmoWOZ dataset integration, official-split validation, original-label preservation and documentation of the optional lossy mapping to the shared emotion labels.
+3. Extended the team's existing TF-IDF/SVM, BiGRU, BiLSTM, single-utterance RoBERTa and context RoBERTa implementations to native EmoWOZ, completing five-seed experiments with dev-only selection and preserving the original model authors' credit.
+4. Added worked inertia failures, paired dialogue-bootstrap comparisons, train-transition interpretation, class/shift analyses and context inference controls, with audited prediction files and reproducibility records.
+5. Prepared executed notebooks, English documentation, figures, baseline slides, the narration script and the recorded Workstream 1 video.
+
+Attribution and AI assistance
+
+The shared framework, evaluation helpers and original model implementations are reused from the team. My additional model work is the EmoWOZ dataset extension, experiment execution, validation and analysis. Implementation and documentation used AI assistance, to be disclosed in the separate personal AI declaration.
+
+Presentation scope
+
+The recorded video covers B0 baselines. This contribution statement also records the broader EmoWOZ work completed for the project.
